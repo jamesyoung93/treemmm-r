@@ -10,7 +10,7 @@ Seven-phase implementation plan for the R port of TreeMMM. The Python package (h
 | 2. DGP port | Port all four DGPs (pharma, cpg, saas, linear) plus the two specialty DGPs (pharma_adstock, geo_panel) to R. With seed = 42 they produce panels structurally equivalent to the Python ones (R uses Mersenne Twister, so values differ; reference attribution shares converge within Monte Carlo error). | **done** (v0.2.2.9000) |
 | 3. Core pipeline | `pipeline.R`, `models.R` (LightGBM with monotone constraints + fixed grid), `decomposer.R` (link-aware), `shap.R` (LightGBM `predcontrib`), `temporal.R` (rolling-origin CV), `data_handler.R` (distribution detection). End-to-end `treemmm_run()` on a panel. | **done** (v0.3.0.9000) |
 | 4. Baselines | GLMM-Naive/Oracle (`lme4`), GLMMDist-Naive/Oracle (base `glm` + Poisson/Gamma/Gaussian), PyMC-Hier-Naive/Oracle (`brms`; user-installed Stan backend). Tree-to-GLMM hybrid deferred. | **done** (v0.4.0.9000) |
-| 5. mROI + diagnostics | `mroi.R` (response curves, constrained reallocation), `diagnostics.R` (regime check, SHAP sign audit). | pending |
+| 5. mROI + diagnostics | `mroi.R` (response curves, coordinate-ascent budget reallocation, mROI-vs-DGP benchmark), `diagnostics.R` (coverage check, variation decomposition, tree-ESS, SHAP sign audit), `baselines.R::fit_glmm_hybrid` (tree-discovered interactions refit into a GLMM). | **done** (v0.5.0.9000) |
 | 6. Documentation | roxygen2 docs on every exported function, three vignettes (`quickstart`, `benchmark`, `dgp_play`), pkgdown site. | pending |
 | 7. Release prep | Cross-language verification test, `NEWS.md` polishing, optional CRAN preparation. | pending |
 
