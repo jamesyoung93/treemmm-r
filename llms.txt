@@ -4,53 +4,77 @@
 tree-based Marketing Mix Modeling with SHAP attribution for
 customer-level panel data.
 
-*Status: v0.2.1.9000 (Phase 1 — scaffold). Phases 2–7 implement the core
-pipeline, baselines, and benchmarks. See
-[`ROADMAP.md`](https://jamesyoung93.github.io/treemmm-r/ROADMAP.md).*
+*Status: v0.2.1 — feature complete. Docs at
+[jamesyoung93.github.io/treemmm-r](https://jamesyoung93.github.io/treemmm-r/).*
 
-This is the R companion to the Python TreeMMM package. The goal is
-feature parity for R users who want to verify, extend, or run TreeMMM in
-their existing R analytics stack. The original paper and Python
-implementation: <https://github.com/jamesyoung93/treemmm>
+This is the R companion to the Python TreeMMM package. Feature parity
+for R users who want to verify, extend, or run TreeMMM in their existing
+R analytics stack. The original paper and Python implementation:
+<https://github.com/jamesyoung93/treemmm>
 
 ## Installation
 
 ``` r
 
-# devtools::install_github not required after v0.2.1 ships:
+# install.packages("devtools")  # if not already installed
 devtools::install_github("jamesyoung93/treemmm-r")
 ```
 
-## Quickstart (target API, not yet implemented)
+## Quickstart
+
+The DGP generators return a list with `$df`, `$columns`, and
+`$ground_truth`. Use `ds$columns` directly when configuring the pipeline
+so the column names always match the generated panel — the synthetic
+DGPs use `customer_id` / `period` / `outcome` rather than
+domain-specific names.
 
 ``` r
 
 library(treemmm)
 
-# Generate the pharma synthetic DGP (3,000 HCPs x 36 months at headline scale)
+# Generate the pharma synthetic DGP
 ds <- generate_pharma_dataset(
-  n_customers = 500,
-  n_periods   = 24,
+  n_customers  = 500,
+  n_periods    = 24,
   random_state = 42
 )
 
-# Configure the pipeline
+# Inspect what was generated
+head(ds$df)
+ds$columns        # column-role mapping
+ds$ground_truth$attribution_shares   # the planted reference shares
+
+# Configure the pipeline using ds$columns
 config <- run_config(
   columns = column_spec(
-    customer_id  = "hcp_id",
-    time_col     = "month",
-    outcome_col  = "new_patients",
-    promo_vars   = c("rep_visits", "dtc_advertising", "samples",
-                     "peer_programs", "digital_impressions", "conference"),
-    control_vars = c("seasonality", "market_index")
+    customer_id  = ds$columns$customer_id,
+    time_col     = ds$columns$time_col,
+    outcome_col  = ds$columns$outcome_col,
+    promo_vars   = ds$columns$promo_vars,
+    control_vars = ds$columns$control_vars
   ),
-  objective = "auto"   # auto-detects Poisson/Tweedie/Gamma/Gaussian
+  objective = "auto"   # auto-detects Poisson / Tweedie / Gamma / Gaussian
 )
 
-# Run the pipeline
+# Run the pipeline (rolling-origin CV, LightGBM + SHAP, link-aware attribution)
 result <- treemmm_run(ds$df, config)
-print(result$attribution_shares)
+
+# Per-channel attribution shares (sums to 1)
+sort(unlist(result$attribution_shares), decreasing = TRUE)
 ```
+
+**Running on your own data:** replace `ds$df` with your panel and set
+the
+[`column_spec()`](https://jamesyoung93.github.io/treemmm-r/reference/column_spec.md)
+fields to your actual column names. The package only requires a
+long-format `data.frame` with one row per (customer, period).
+
+See
+[`vignette("quickstart")`](https://jamesyoung93.github.io/treemmm-r/articles/quickstart.md),
+[`vignette("benchmark")`](https://jamesyoung93.github.io/treemmm-r/articles/benchmark.md),
+and
+[`vignette("dgp_play")`](https://jamesyoung93.github.io/treemmm-r/articles/dgp_play.md)
+for longer walk-throughs.
 
 ## Verification target
 
@@ -70,7 +94,7 @@ README will display the side-by-side numbers.
 | Component | Python | R |
 |----|----|----|
 | GBT engine | LightGBM (Python bindings) | `lightgbm` R package |
-| SHAP | `shap.TreeExplainer` | `treeshap` |
+| SHAP | `shap.TreeExplainer` | `predict(model, X, type = "contrib")` (LightGBM built-in) |
 | Hyperparameter search | Optuna (TPE) | fixed grid for v0.2.1; `mlr3tuning` deferred |
 | Mixed-effects baseline | `statsmodels.MixedLM` | [`lme4::lmer`](https://rdrr.io/pkg/lme4/man/lmer.html) |
 | Bayesian baseline | PyMC + nutpie | `brms` (Stan) |

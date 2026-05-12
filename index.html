@@ -57,44 +57,53 @@
 <div class="page-header"><h1 id="treemmm-r">treemmm-r<a class="anchor" aria-label="anchor" href="#treemmm-r"></a>
 </h1></div>
 <p><strong>R port of <a href="https://github.com/jamesyoung93/treemmm" class="external-link">TreeMMM</a></strong> — tree-based Marketing Mix Modeling with SHAP attribution for customer-level panel data.</p>
-<p><em>Status: v0.2.1.9000 (Phase 1 — scaffold). Phases 2–7 implement the core pipeline, baselines, and benchmarks. See <a href="ROADMAP.html"><code>ROADMAP.md</code></a>.</em></p>
-<p>This is the R companion to the Python TreeMMM package. The goal is feature parity for R users who want to verify, extend, or run TreeMMM in their existing R analytics stack. The original paper and Python implementation: <a href="https://github.com/jamesyoung93/treemmm" class="external-link uri">https://github.com/jamesyoung93/treemmm</a></p>
+<p><em>Status: v0.2.1 — feature complete. Docs at <a href="https://jamesyoung93.github.io/treemmm-r/">jamesyoung93.github.io/treemmm-r</a>.</em></p>
+<p>This is the R companion to the Python TreeMMM package. Feature parity for R users who want to verify, extend, or run TreeMMM in their existing R analytics stack. The original paper and Python implementation: <a href="https://github.com/jamesyoung93/treemmm" class="external-link uri">https://github.com/jamesyoung93/treemmm</a></p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># devtools::install_github not required after v0.2.1 ships:</span></span>
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")  # if not already installed</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"jamesyoung93/treemmm-r"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="quickstart-target-api-not-yet-implemented">Quickstart (target API, not yet implemented)<a class="anchor" aria-label="anchor" href="#quickstart-target-api-not-yet-implemented"></a>
+<h2 id="quickstart">Quickstart<a class="anchor" aria-label="anchor" href="#quickstart"></a>
 </h2>
+<p>The DGP generators return a list with <code>$df</code>, <code>$columns</code>, and <code>$ground_truth</code>. Use <code>ds$columns</code> directly when configuring the pipeline so the column names always match the generated panel — the synthetic DGPs use <code>customer_id</code> / <code>period</code> / <code>outcome</code> rather than domain-specific names.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/jamesyoung93/treemmm-r" class="external-link">treemmm</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Generate the pharma synthetic DGP (3,000 HCPs x 36 months at headline scale)</span></span>
+<span><span class="co"># Generate the pharma synthetic DGP</span></span>
 <span><span class="va">ds</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/generate_pharma_dataset.html">generate_pharma_dataset</a></span><span class="op">(</span></span>
-<span>  n_customers <span class="op">=</span> <span class="fl">500</span>,</span>
-<span>  n_periods   <span class="op">=</span> <span class="fl">24</span>,</span>
+<span>  n_customers  <span class="op">=</span> <span class="fl">500</span>,</span>
+<span>  n_periods    <span class="op">=</span> <span class="fl">24</span>,</span>
 <span>  random_state <span class="op">=</span> <span class="fl">42</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Configure the pipeline</span></span>
+<span><span class="co"># Inspect what was generated</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span><span class="op">)</span></span>
+<span><span class="va">ds</span><span class="op">$</span><span class="va">columns</span>        <span class="co"># column-role mapping</span></span>
+<span><span class="va">ds</span><span class="op">$</span><span class="va">ground_truth</span><span class="op">$</span><span class="va">attribution_shares</span>   <span class="co"># the planted reference shares</span></span>
+<span></span>
+<span><span class="co"># Configure the pipeline using ds$columns</span></span>
 <span><span class="va">config</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/run_config.html">run_config</a></span><span class="op">(</span></span>
 <span>  columns <span class="op">=</span> <span class="fu"><a href="reference/column_spec.html">column_spec</a></span><span class="op">(</span></span>
-<span>    customer_id  <span class="op">=</span> <span class="st">"hcp_id"</span>,</span>
-<span>    time_col     <span class="op">=</span> <span class="st">"month"</span>,</span>
-<span>    outcome_col  <span class="op">=</span> <span class="st">"new_patients"</span>,</span>
-<span>    promo_vars   <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rep_visits"</span>, <span class="st">"dtc_advertising"</span>, <span class="st">"samples"</span>,</span>
-<span>                     <span class="st">"peer_programs"</span>, <span class="st">"digital_impressions"</span>, <span class="st">"conference"</span><span class="op">)</span>,</span>
-<span>    control_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"seasonality"</span>, <span class="st">"market_index"</span><span class="op">)</span></span>
+<span>    customer_id  <span class="op">=</span> <span class="va">ds</span><span class="op">$</span><span class="va">columns</span><span class="op">$</span><span class="va">customer_id</span>,</span>
+<span>    time_col     <span class="op">=</span> <span class="va">ds</span><span class="op">$</span><span class="va">columns</span><span class="op">$</span><span class="va">time_col</span>,</span>
+<span>    outcome_col  <span class="op">=</span> <span class="va">ds</span><span class="op">$</span><span class="va">columns</span><span class="op">$</span><span class="va">outcome_col</span>,</span>
+<span>    promo_vars   <span class="op">=</span> <span class="va">ds</span><span class="op">$</span><span class="va">columns</span><span class="op">$</span><span class="va">promo_vars</span>,</span>
+<span>    control_vars <span class="op">=</span> <span class="va">ds</span><span class="op">$</span><span class="va">columns</span><span class="op">$</span><span class="va">control_vars</span></span>
 <span>  <span class="op">)</span>,</span>
-<span>  objective <span class="op">=</span> <span class="st">"auto"</span>   <span class="co"># auto-detects Poisson/Tweedie/Gamma/Gaussian</span></span>
+<span>  objective <span class="op">=</span> <span class="st">"auto"</span>   <span class="co"># auto-detects Poisson / Tweedie / Gamma / Gaussian</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Run the pipeline</span></span>
+<span><span class="co"># Run the pipeline (rolling-origin CV, LightGBM + SHAP, link-aware attribution)</span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/treemmm_run.html">treemmm_run</a></span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span>, <span class="va">config</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">attribution_shares</span><span class="op">)</span></span></code></pre></div>
+<span></span>
+<span><span class="co"># Per-channel attribution shares (sums to 1)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">attribution_shares</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Running on your own data:</strong> replace <code>ds$df</code> with your panel and set the <code><a href="reference/column_spec.html">column_spec()</a></code> fields to your actual column names. The package only requires a long-format <code>data.frame</code> with one row per (customer, period).</p>
+<p>See <code><a href="articles/quickstart.html">vignette("quickstart")</a></code>, <code><a href="articles/benchmark.html">vignette("benchmark")</a></code>, and <code><a href="articles/dgp_play.html">vignette("dgp_play")</a></code> for longer walk-throughs.</p>
 </div>
 <div class="section level2">
 <h2 id="verification-target">Verification target<a class="anchor" aria-label="anchor" href="#verification-target"></a>
@@ -154,7 +163,8 @@
 <tr>
 <td>SHAP</td>
 <td><code>shap.TreeExplainer</code></td>
-<td><code>treeshap</code></td>
+<td>
+<code>predict(model, X, type = "contrib")</code> (LightGBM built-in)</td>
 </tr>
 <tr>
 <td>Hyperparameter search</td>
