@@ -1,53 +1,68 @@
-# treemmm 0.6.0.9000 (development)
+# treemmm 0.2.1 (2026-05-12)
 
-## Phase 6 — Documentation (2026-05-12)
+First feature-complete release of the R port. Mirrors the Python
+TreeMMM 0.2.1 release at https://github.com/jamesyoung93/treemmm.
 
-* Three vignettes in `vignettes/`:
-  * **quickstart.Rmd** — five-minute end-to-end TreeMMM run on the pharma DGP.
-  * **benchmark.Rmd** — head-to-head TreeMMM vs GLMM-Naive / GLMM-Oracle /
-    GLMMDist-Naive, with attribution-share MAPE and mROI ranking comparison.
-  * **dgp_play.Rmd** — inspecting and tuning the synthetic DGPs (sample size,
-    seed, HCS segment means, adstock variant, reproducibility caveat across
-    R and Python).
-* `_pkgdown.yml` configures the reference grouping (Pipeline / Synthetic DGPs
-  / Marginal ROI / Diagnostics) and links back to the Python repo and `SPEC.md`.
-* GitHub Actions workflow now runs `roxygen2::roxygenize()` before
-  `R CMD check`, so `man/*.Rd` is auto-generated on CI even though it is
-  not committed. Users installing locally should run `devtools::document()`
-  once after cloning to populate `man/`.
-* `VignetteBuilder: knitr` restored in `DESCRIPTION`; `knitr` and `rmarkdown`
-  are available in Suggests via the existing CI dependency block.
+## Highlights
 
-# treemmm 0.5.0.9000 (development)
+* **End-to-end pipeline** (`treemmm_run`): LightGBM with monotone
+  constraints, fixed-grid hyperparameter search, SHAP attribution via
+  `predict(..., type = "contrib")`, link-function-aware decomposer,
+  rolling-origin temporal CV, outcome-distribution detection.
+* **Six synthetic DGPs**: pharma (NegBin), CPG (Tweedie), SaaS
+  (ZI-Gamma), linear (Gaussian honesty test), pharma+adstock, geo-panel.
+  All parameterizable; `generate_*_dataset()` returns a panel, role
+  mapping, and ground-truth attribution shares.
+* **Six baselines**: GLMM-Naive/Oracle (`lme4`), GLMMDist-Naive/Oracle
+  (base `glm`), Bayesian PyMC-Hier-Naive/Oracle (`brms`, optional).
+* **mROI module**: `simulate_response`, `mroi_ranking`,
+  `mroi_benchmark`, `optimize_budget`.
+* **Diagnostics**: `coverage_check`, `variation_decomposition`,
+  `tree_ess_per_param`, `shap_sign_audit`, `diagnose_distribution`.
+* **Tree-to-GLMM hybrid** (`fit_glmm_hybrid`): tree-discovered
+  interactions refit into a GLMM.
+* **Three vignettes**: quickstart, benchmark, dgp_play.
+* **pkgdown** configured; CI builds and deploys the site to gh-pages.
+* **Cross-language verification** test (`test-verification.R`)
+  asserts R-port pharma TreeMMM produces sensible attribution at a
+  moderate scale and that the linear honesty test holds.
 
-## Phase 5 — mROI + diagnostics + hybrid (2026-05-12)
+## Reproducibility caveat across R and Python
 
-* mROI module, diagnostics suite, working tree-to-GLMM hybrid.
+R's Mersenne Twister and Python's PCG64 produce different samples at
+the same numeric seed. The DGP coefficients and structural form match
+exactly between implementations; planted reference attribution shares
+converge to the Python ones within Monte Carlo error (< 0.5 pp at
+headline scale).
 
-# treemmm 0.4.0.9000 (development)
+See `SPEC.md` in the repository for the formal specification both
+implementations target.
 
-## Phase 4 — Baselines (2026-05-12)
+## Library mapping (Python → R)
 
-* GLMM-Naive / Oracle / Dist / Bayesian (brms) baselines.
+| Python | R |
+|---|---|
+| LightGBM | `lightgbm` |
+| `shap.TreeExplainer` | `predict(..., type = "contrib")` |
+| Optuna | fixed grid (Bayesian opt deferred) |
+| `statsmodels.MixedLM` | `lme4::lmer` |
+| PyMC | `brms` (optional, Stan backend) |
+| pandas | `data.table` |
+| matplotlib | `ggplot2` |
 
-# treemmm 0.3.0.9000 (development)
+## Installation
 
-## Phase 3 — Core pipeline (2026-05-12)
+```r
+devtools::install_github("jamesyoung93/treemmm-r")
+library(treemmm)
+```
 
-* End-to-end `treemmm_run()`.
+## Phase log (development history)
 
-# treemmm 0.2.2.9000 (development)
-
-## Phase 2 — DGP port (2026-05-12)
-
-* All six DGPs.
-
-# treemmm 0.2.1.9000 (development)
-
-## Phase 1 — Scaffold (2026-05-11)
-
-* Package skeleton.
-
-## Planned future versions
-
-* **0.7.0** — Phase 7 (cross-language verification test, release prep).
+* **Phase 1** (scaffold) — package skeleton and CI (2026-05-11).
+* **Phase 2** (DGP port) — all six DGPs implemented (2026-05-12).
+* **Phase 3** (core pipeline) — `treemmm_run()` end-to-end (2026-05-12).
+* **Phase 4** (baselines) — GLMM / GLMMDist / Bayesian (2026-05-12).
+* **Phase 5** (mROI + diagnostics + hybrid) (2026-05-12).
+* **Phase 6** (vignettes + pkgdown + roxygen CI) (2026-05-12).
+* **Phase 7** (release prep, this release) (2026-05-12).

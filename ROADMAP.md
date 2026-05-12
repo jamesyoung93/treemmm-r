@@ -12,7 +12,7 @@ Seven-phase implementation plan for the R port of TreeMMM. The Python package (h
 | 4. Baselines | GLMM-Naive/Oracle (`lme4`), GLMMDist-Naive/Oracle (base `glm` + Poisson/Gamma/Gaussian), PyMC-Hier-Naive/Oracle (`brms`; user-installed Stan backend). Tree-to-GLMM hybrid deferred. | **done** (v0.4.0.9000) |
 | 5. mROI + diagnostics | `mroi.R` (response curves, coordinate-ascent budget reallocation, mROI-vs-DGP benchmark), `diagnostics.R` (coverage check, variation decomposition, tree-ESS, SHAP sign audit), `baselines.R::fit_glmm_hybrid` (tree-discovered interactions refit into a GLMM). | **done** (v0.5.0.9000) |
 | 6. Documentation | Three vignettes (`quickstart`, `benchmark`, `dgp_play`); `_pkgdown.yml` with grouped reference; CI runs `roxygen2::roxygenize()` before `R CMD check` so `man/` is auto-populated. | **done** (v0.6.0.9000) |
-| 7. Release prep | Cross-language verification test, `NEWS.md` polishing, optional CRAN preparation. | pending |
+| 7. Release prep | Cross-language verification test (`test-verification.R`), pkgdown deployment workflow, `cran-comments.md`. Version dropped from dev suffix to mirror Python `v0.2.1`. | **done** (v0.2.1) |
 
 ## Cross-language verification (Phase 7)
 
