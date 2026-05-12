@@ -32,17 +32,19 @@ decompose <- function(shap_result, predictions, link = c("identity", "log")) {
     ))
   }
 
-  # Log link: proportional allocation including a "_base" component
-  # (the expected value contributes proportionally to |base|).
+  # Log link: proportional allocation across feature SHAP values only.
+  # The SHAP expected_value (in margin/log space) is O(log(mean_outcome))
+  # which is much larger than per-feature |SHAP| values on the same scale,
+  # so including it in the denominator would let it swallow most of the
+  # share. Python TreeMMM's decomposer also allocates only across features
+  # for log-link models. Each row's attributions sum exactly to the
+  # prediction.
   abs_sv <- abs(sv)
-  abs_base <- rep(abs(base), n)
-  total <- rowSums(abs_sv) + abs_base
-  total[total == 0] <- 1  # avoid divide-by-zero
-  per_obs <- abs_sv * (predictions / total)
-  base_col <- abs_base * (predictions / total)
-  full <- cbind("_base" = base_col, per_obs)
+  row_total <- rowSums(abs_sv)
+  row_total[row_total == 0] <- 1
+  per_obs <- abs_sv * (predictions / row_total)
   structure(
-    list(per_obs = full, predictions = predictions, link = "log"),
+    list(per_obs = per_obs, predictions = predictions, link = "log"),
     class = "attribution"
   )
 }
