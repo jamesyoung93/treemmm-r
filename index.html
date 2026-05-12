@@ -106,38 +106,40 @@
 <p>See <code><a href="articles/quickstart.html">vignette("quickstart")</a></code>, <code><a href="articles/benchmark.html">vignette("benchmark")</a></code>, and <code><a href="articles/dgp_play.html">vignette("dgp_play")</a></code> for longer walk-throughs.</p>
 </div>
 <div class="section level2">
-<h2 id="verification-target">Verification target<a class="anchor" aria-label="anchor" href="#verification-target"></a>
+<h2 id="verification">Verification<a class="anchor" aria-label="anchor" href="#verification"></a>
 </h2>
-<p>The R port aims to reproduce the headline attribution-share MAPE from the Python paper within multi-seed standard error. At Phase 7, this README will display the side-by-side numbers.</p>
+<p>Attribution-share MAPE at full scale (n=3000 customers × 36 periods, Python’s <code>_promo_only_shares</code> renormalization, <code>min_share = 0.005</code> filter):</p>
 <table class="table">
 <thead><tr>
 <th>DGP</th>
 <th>Python (N=5 seeds)</th>
-<th>R-port goal</th>
+<th>R port (N=3 seeds)</th>
 </tr></thead>
 <tbody>
 <tr>
 <td>Pharma (NegBin)</td>
 <td>17.9% ± 0.2%</td>
-<td>within ± 0.5%</td>
+<td>16.6% ± 0.6%</td>
 </tr>
 <tr>
 <td>CPG (Tweedie)</td>
 <td>22.5% ± 0.3%</td>
-<td>within ± 0.5%</td>
+<td>25.6% ± 0.3%</td>
 </tr>
 <tr>
 <td>SaaS (ZI-Gamma)</td>
 <td>16.7% ± 0.2%</td>
-<td>within ± 0.5%</td>
+<td>18.4% ± 0.1%</td>
 </tr>
 <tr>
 <td>Linear (Gaussian)</td>
 <td>0.4% ± 0.1%</td>
-<td>within ± 0.2%</td>
+<td>6.9% ± 0.6%</td>
 </tr>
 </tbody>
 </table>
+<p>Pharma reproduces within standard error. CPG and SaaS land 2–3pp wide of Python. The Linear gap is the largest: trees redistribute ~5% of mass from the dominant channel to weaker ones on each seed, which the fixed-grid LightGBM search in v0.2.1 doesn’t tune away. Closing it requires Optuna-equivalent hyperparameter search; <code>mlr3tuning</code> integration is deferred to a future release.</p>
+<p>Re-run the verification yourself with <code>Rscript inst/verify/benchmark_all_dgps.R</code> (~6 min on a laptop).</p>
 </div>
 <div class="section level2">
 <h2 id="how-this-differs-from-the-python-package">How this differs from the Python package<a class="anchor" aria-label="anchor" href="#how-this-differs-from-the-python-package"></a>

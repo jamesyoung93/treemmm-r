@@ -89,12 +89,12 @@ cmp <- data.frame(
 )
 cmp
 #>               channel truth treemmm glmm_naive glmm_orcl glmm_dist
-#> 1          rep_visits 0.361   0.424      0.347     0.427     0.282
-#> 2     dtc_advertising 0.190   0.172      0.225     0.193     0.241
-#> 3             samples 0.305   0.302      0.279     0.290     0.299
-#> 4       peer_programs 0.053   0.039      0.077     0.059     0.056
-#> 5 digital_impressions 0.040   0.016      0.045     0.023     0.023
-#> 6          conference 0.004   0.000      0.001     0.005     0.020
+#> 1          rep_visits 0.361   0.419      0.347     0.427     0.282
+#> 2     dtc_advertising 0.190   0.164      0.225     0.193     0.241
+#> 3             samples 0.305   0.291      0.279     0.290     0.299
+#> 4       peer_programs 0.053   0.040      0.077     0.059     0.056
+#> 5 digital_impressions 0.040   0.030      0.045     0.023     0.023
+#> 6          conference 0.004   0.001      0.001     0.005     0.020
 ```
 
 ### Attribution-share MAPE (lower is better)
@@ -113,7 +113,7 @@ c(
   glmm_dist  = mape(dist_shares[promo],   true_shares)
 )
 #>    treemmm glmm_naive  glmm_orcl  glmm_dist 
-#>  0.2298117  0.1736835  0.1589810  0.1978675
+#>  0.1718523  0.1736835  0.1589810  0.1978675
 ```
 
 At small scale results are noisy. The Python paper’s headline values
@@ -126,7 +126,7 @@ GLMM-Naive 22.2 +/- 0.3.
 
 mroi_ranking(tree_result, channels = promo)
 #>          rep_visits     dtc_advertising             samples digital_impressions 
-#>           235.89592           186.52466           165.09449            12.42204 
+#>           269.38132           169.51215           168.63796            35.95923 
 #>       peer_programs          conference 
 #>             0.00000             0.00000
 ```
@@ -143,10 +143,10 @@ bench$direction_accuracy
 bench$table
 #>                channel model_mroi  true_share
 #>                 <char>      <num>       <num>
-#> 1:          rep_visits  235.89592 0.360963182
-#> 2:     dtc_advertising  186.52466 0.189770001
-#> 3:             samples  165.09449 0.305462192
+#> 1:          rep_visits  269.38132 0.360963182
+#> 2:     dtc_advertising  169.51215 0.189770001
+#> 3:             samples  168.63796 0.305462192
 #> 4:       peer_programs    0.00000 0.053305953
-#> 5: digital_impressions   12.42204 0.040495114
+#> 5: digital_impressions   35.95923 0.040495114
 #> 6:          conference    0.00000 0.004253207
 ```

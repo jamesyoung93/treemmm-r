@@ -142,9 +142,9 @@ The recovered attribution shares per channel:
 
 sort(unlist(result$attribution_shares), decreasing = TRUE)
 #>          rep_visits             samples     dtc_advertising       peer_programs 
-#>          0.46739666          0.27261720          0.15388800          0.04942473 
-#> digital_impressions        market_index         seasonality          conference 
-#>          0.03116750          0.01418174          0.01132417          0.00000000
+#>          0.47204301          0.25701416          0.15664642          0.04798009 
+#> digital_impressions         seasonality        market_index          conference 
+#>          0.03861532          0.01688033          0.01082067          0.00000000
 ```
 
 Per-fold performance metrics:
@@ -153,9 +153,9 @@ Per-fold performance metrics:
 
 do.call(rbind, lapply(result$fold_metrics, as.data.frame))
 #>   fold        r2     wmape      mae n_test
-#> 1    1 0.4020115 0.6539378 1529.462    100
-#> 2    2 0.5290944 0.5688630 1499.841    100
-#> 3    3 0.5575484 0.5481093 1327.005    100
+#> 1    1 0.3222962 0.7096601 1659.789    100
+#> 2    2 0.4972595 0.5933536 1564.412    100
+#> 3    3 0.5416289 0.5554942 1344.885    100
 ```
 
 ### What next

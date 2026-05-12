@@ -196,16 +196,16 @@ distribution.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">attribution_shares</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          rep_visits             samples     dtc_advertising       peer_programs </span></span>
-<span><span class="co">#&gt;          0.46739666          0.27261720          0.15388800          0.04942473 </span></span>
-<span><span class="co">#&gt; digital_impressions        market_index         seasonality          conference </span></span>
-<span><span class="co">#&gt;          0.03116750          0.01418174          0.01132417          0.00000000</span></span></code></pre></div>
+<span><span class="co">#&gt;          0.47204301          0.25701416          0.15664642          0.04798009 </span></span>
+<span><span class="co">#&gt; digital_impressions         seasonality        market_index          conference </span></span>
+<span><span class="co">#&gt;          0.03861532          0.01688033          0.01082067          0.00000000</span></span></code></pre></div>
 <p>Per-fold performance metrics:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">fold_metrics</span>, <span class="va">as.data.frame</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;   fold        r2     wmape      mae n_test</span></span>
-<span><span class="co">#&gt; 1    1 0.4020115 0.6539378 1529.462    100</span></span>
-<span><span class="co">#&gt; 2    2 0.5290944 0.5688630 1499.841    100</span></span>
-<span><span class="co">#&gt; 3    3 0.5575484 0.5481093 1327.005    100</span></span></code></pre></div>
+<span><span class="co">#&gt; 1    1 0.3222962 0.7096601 1659.789    100</span></span>
+<span><span class="co">#&gt; 2    2 0.4972595 0.5933536 1564.412    100</span></span>
+<span><span class="co">#&gt; 3    3 0.5416289 0.5554942 1344.885    100</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="what-next">What next<a class="anchor" aria-label="anchor" href="#what-next"></a>

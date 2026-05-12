@@ -148,12 +148,12 @@ with the planted DGP reference share:</p>
 <span><span class="op">)</span></span>
 <span><span class="va">cmp</span></span>
 <span><span class="co">#&gt;               channel truth treemmm glmm_naive glmm_orcl glmm_dist</span></span>
-<span><span class="co">#&gt; 1          rep_visits 0.361   0.424      0.347     0.427     0.282</span></span>
-<span><span class="co">#&gt; 2     dtc_advertising 0.190   0.172      0.225     0.193     0.241</span></span>
-<span><span class="co">#&gt; 3             samples 0.305   0.302      0.279     0.290     0.299</span></span>
-<span><span class="co">#&gt; 4       peer_programs 0.053   0.039      0.077     0.059     0.056</span></span>
-<span><span class="co">#&gt; 5 digital_impressions 0.040   0.016      0.045     0.023     0.023</span></span>
-<span><span class="co">#&gt; 6          conference 0.004   0.000      0.001     0.005     0.020</span></span></code></pre></div>
+<span><span class="co">#&gt; 1          rep_visits 0.361   0.419      0.347     0.427     0.282</span></span>
+<span><span class="co">#&gt; 2     dtc_advertising 0.190   0.164      0.225     0.193     0.241</span></span>
+<span><span class="co">#&gt; 3             samples 0.305   0.291      0.279     0.290     0.299</span></span>
+<span><span class="co">#&gt; 4       peer_programs 0.053   0.040      0.077     0.059     0.056</span></span>
+<span><span class="co">#&gt; 5 digital_impressions 0.040   0.030      0.045     0.023     0.023</span></span>
+<span><span class="co">#&gt; 6          conference 0.004   0.001      0.001     0.005     0.020</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="attribution-share-mape-lower-is-better">Attribution-share MAPE (lower is better)<a class="anchor" aria-label="anchor" href="#attribution-share-mape-lower-is-better"></a>
@@ -171,7 +171,7 @@ with the planted DGP reference share:</p>
 <span>  glmm_dist  <span class="op">=</span> <span class="fu">mape</span><span class="op">(</span><span class="va">dist_shares</span><span class="op">[</span><span class="va">promo</span><span class="op">]</span>,   <span class="va">true_shares</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;    treemmm glmm_naive  glmm_orcl  glmm_dist </span></span>
-<span><span class="co">#&gt;  0.2298117  0.1736835  0.1589810  0.1978675</span></span></code></pre></div>
+<span><span class="co">#&gt;  0.1718523  0.1736835  0.1589810  0.1978675</span></span></code></pre></div>
 <p>At small scale results are noisy. The Python paper’s headline values
 (3,000 customers x 36 months, N=5 seeds) are TreeMMM 17.9 +/- 0.2 vs.
 GLMM-Naive 22.2 +/- 0.3.</p>
@@ -182,7 +182,7 @@ GLMM-Naive 22.2 +/- 0.3.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/mroi_ranking.html">mroi_ranking</a></span><span class="op">(</span><span class="va">tree_result</span>, channels <span class="op">=</span> <span class="va">promo</span><span class="op">)</span></span>
 <span><span class="co">#&gt;          rep_visits     dtc_advertising             samples digital_impressions </span></span>
-<span><span class="co">#&gt;           235.89592           186.52466           165.09449            12.42204 </span></span>
+<span><span class="co">#&gt;           269.38132           169.51215           168.63796            35.95923 </span></span>
 <span><span class="co">#&gt;       peer_programs          conference </span></span>
 <span><span class="co">#&gt;             0.00000             0.00000</span></span></code></pre></div>
 <p>Compare the model’s mROI ranking against the DGP’s:</p>
@@ -195,11 +195,11 @@ GLMM-Naive 22.2 +/- 0.3.</p>
 <span><span class="va">bench</span><span class="op">$</span><span class="va">table</span></span>
 <span><span class="co">#&gt;                channel model_mroi  true_share</span></span>
 <span><span class="co">#&gt;                 &lt;char&gt;      &lt;num&gt;       &lt;num&gt;</span></span>
-<span><span class="co">#&gt; 1:          rep_visits  235.89592 0.360963182</span></span>
-<span><span class="co">#&gt; 2:     dtc_advertising  186.52466 0.189770001</span></span>
-<span><span class="co">#&gt; 3:             samples  165.09449 0.305462192</span></span>
+<span><span class="co">#&gt; 1:          rep_visits  269.38132 0.360963182</span></span>
+<span><span class="co">#&gt; 2:     dtc_advertising  169.51215 0.189770001</span></span>
+<span><span class="co">#&gt; 3:             samples  168.63796 0.305462192</span></span>
 <span><span class="co">#&gt; 4:       peer_programs    0.00000 0.053305953</span></span>
-<span><span class="co">#&gt; 5: digital_impressions   12.42204 0.040495114</span></span>
+<span><span class="co">#&gt; 5: digital_impressions   35.95923 0.040495114</span></span>
 <span><span class="co">#&gt; 6:          conference    0.00000 0.004253207</span></span></code></pre></div>
 </div>
 </div>
