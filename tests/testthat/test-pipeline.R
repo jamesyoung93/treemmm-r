@@ -69,7 +69,10 @@ test_that("diagnose_distribution covers the major cases", {
   expect_equal(diagnose_distribution(rpois(200, 3))$family, "poisson")
   expect_equal(diagnose_distribution(c(rep(0, 30), rgamma(170, 2, 0.5)))$family,
                "tweedie")
-  expect_equal(diagnose_distribution(rnorm(100, 5, 2))$family, "gaussian")
+  # Centered Gaussian with negatives -> default gaussian branch
+  expect_equal(diagnose_distribution(rnorm(100))$family, "gaussian")
+  # Strictly positive continuous -> gamma
+  expect_equal(diagnose_distribution(rgamma(100, 2, 0.5))$family, "gamma")
 })
 
 test_that("get_splits returns the requested number of rolling-origin folds", {
