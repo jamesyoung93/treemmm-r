@@ -360,9 +360,86 @@ fit_bayesian_hier_oracle <- function(df, config, planted_interactions,
 
 
 # ---------------------------------------------------------------------------
-# Tree-to-GLMM hybrid: deferred (Phase 5).
+# Tree-to-GLMM hybrid: fit a tree, extract top interaction pairs by SHAP-
+# pair importance, then refit a GLMM with those interactions as fixed effects.
+# Mirrors treemmm.core.models.glmm_hybrid in the Python package.
 # ---------------------------------------------------------------------------
 
-fit_glmm_hybrid <- function(df, config) {
-  stop("Not yet implemented (Phase 5). See ROADMAP.md.")
+#' Fit the tree-to-GLMM hybrid baseline
+#'
+#' Two-stage procedure:
+#'   1. Fit a LightGBM model and compute SHAP values.
+#'   2. Rank feature pairs by mean product of |SHAP_i * SHAP_j| across rows;
+#'      pick the top `n_interactions`.
+#'   3. Refit a GLMM (`lme4::lmer`) with main effects plus those discovered
+#'      interactions as fixed-effect product terms.
+#'
+#' @param df A panel.
+#' @param config A [run_config()] object.
+#' @param n_interactions Number of top SHAP-derived interaction pairs to keep.
+#' @return Same structure as [fit_glmm_naive()] plus `$discovered_interactions`.
+#' @noRd
+fit_glmm_hybrid <- function(df, config, n_interactions = 3L) {
+  if (!requireNamespace("lme4", quietly = TRUE)) {
+    stop("Requires 'lme4'. Install via install.packages('lme4').")
+  }
+  if (!requireNamespace("lightgbm", quietly = TRUE)) {
+    stop("Requires 'lightgbm'. Install via install.packages('lightgbm').")
+  }
+
+  prepared <- prepare_data(df, config)
+  cs <- config$columns
+  d <- prepared$df
+
+  # Stage 1: train a quick LightGBM model to discover interactions.
+  X <- as.matrix(d[, c(cs$promo_vars, cs$control_vars), with = FALSE])
+  storage.mode(X) <- "double"
+  y <- as.numeric(d[[cs$outcome_col]])
+  lgbm_obj <- .objective_to_lgbm(prepared$objective)
+  monotone <- build_monotone_constraints(
+    c(cs$promo_vars, cs$control_vars), cs$promo_vars)
+  fit <- fit_lightgbm(X, y,
+                      objective = lgbm_obj,
+                      tweedie_variance_power = config$tweedie_variance_power,
+                      monotone_constraints = monotone,
+                      n_trials = 1L,
+                      random_state = config$random_state)
+  shap_result <- compute_shap(fit$model, X, link = prepared$link)
+  sv <- shap_result$shap_values
+
+  # Stage 2: rank feature pairs by mean |product of SHAP|
+  promo <- cs$promo_vars
+  pair_scores <- list()
+  for (i in seq_along(promo)) {
+    for (j in seq_along(promo)) {
+      if (j <= i) next
+      score <- mean(abs(sv[, promo[i]] * sv[, promo[j]]))
+      pair_scores[[length(pair_scores) + 1L]] <- list(
+        var1 = promo[i], var2 = promo[j], score = score
+      )
+    }
+  }
+  pair_scores <- pair_scores[order(
+    -vapply(pair_scores, `[[`, numeric(1L), "score"))]
+  top <- head(pair_scores, n_interactions)
+  discovered <- lapply(top, function(p) interaction_spec(p$var1, p$var2))
+
+  # Stage 3: refit a GLMM with discovered interactions.
+  use_log1p <- prepared$objective != "gaussian"
+  lhs <- if (use_log1p) sprintf("log1p(%s)", cs$outcome_col) else cs$outcome_col
+  rhs <- .formula_rhs(cs$promo_vars, cs$control_vars,
+                      extras = .interaction_terms(discovered))
+  fml <- stats::as.formula(sprintf("%s ~ %s + (1 | %s)",
+                                   lhs, rhs, cs$customer_id))
+  model <- suppressMessages(suppressWarnings(
+    lme4::lmer(fml, data = d, REML = TRUE)
+  ))
+
+  shares <- .extract_regression_shares(
+    model, d, c(cs$promo_vars, cs$control_vars),
+    link = prepared$link, base_share = 0
+  )
+  list(model = model, attribution_shares = shares,
+       formula = fml, objective = prepared$objective,
+       discovered_interactions = discovered)
 }
