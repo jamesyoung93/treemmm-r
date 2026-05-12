@@ -195,12 +195,10 @@ distribution.</p>
 <p>The recovered attribution shares per channel:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">attribution_shares</span><span class="op">)</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt;               _base          rep_visits             samples     dtc_advertising </span></span>
-<span><span class="co">#&gt;         0.803456299         0.092387822         0.053711820         0.029991231 </span></span>
-<span><span class="co">#&gt;       peer_programs digital_impressions        market_index         seasonality </span></span>
-<span><span class="co">#&gt;         0.009507586         0.006031797         0.002766271         0.002147175 </span></span>
-<span><span class="co">#&gt;          conference </span></span>
-<span><span class="co">#&gt;         0.000000000</span></span></code></pre></div>
+<span><span class="co">#&gt;          rep_visits             samples     dtc_advertising       peer_programs </span></span>
+<span><span class="co">#&gt;          0.46739666          0.27261720          0.15388800          0.04942473 </span></span>
+<span><span class="co">#&gt; digital_impressions        market_index         seasonality          conference </span></span>
+<span><span class="co">#&gt;          0.03116750          0.01418174          0.01132417          0.00000000</span></span></code></pre></div>
 <p>Per-fold performance metrics:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">fold_metrics</span>, <span class="va">as.data.frame</span><span class="op">)</span><span class="op">)</span></span>

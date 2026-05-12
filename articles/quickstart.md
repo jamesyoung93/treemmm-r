@@ -141,12 +141,10 @@ The recovered attribution shares per channel:
 ``` r
 
 sort(unlist(result$attribution_shares), decreasing = TRUE)
-#>               _base          rep_visits             samples     dtc_advertising 
-#>         0.803456299         0.092387822         0.053711820         0.029991231 
-#>       peer_programs digital_impressions        market_index         seasonality 
-#>         0.009507586         0.006031797         0.002766271         0.002147175 
-#>          conference 
-#>         0.000000000
+#>          rep_visits             samples     dtc_advertising       peer_programs 
+#>          0.46739666          0.27261720          0.15388800          0.04942473 
+#> digital_impressions        market_index         seasonality          conference 
+#>          0.03116750          0.01418174          0.01132417          0.00000000
 ```
 
 Per-fold performance metrics:

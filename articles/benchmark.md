@@ -89,11 +89,11 @@ cmp <- data.frame(
 )
 cmp
 #>               channel truth treemmm glmm_naive glmm_orcl glmm_dist
-#> 1          rep_visits 0.361   0.084      0.347     0.427     0.282
-#> 2     dtc_advertising 0.190   0.034      0.225     0.193     0.241
-#> 3             samples 0.305   0.060      0.279     0.290     0.299
-#> 4       peer_programs 0.053   0.008      0.077     0.059     0.056
-#> 5 digital_impressions 0.040   0.003      0.045     0.023     0.023
+#> 1          rep_visits 0.361   0.424      0.347     0.427     0.282
+#> 2     dtc_advertising 0.190   0.172      0.225     0.193     0.241
+#> 3             samples 0.305   0.302      0.279     0.290     0.299
+#> 4       peer_programs 0.053   0.039      0.077     0.059     0.056
+#> 5 digital_impressions 0.040   0.016      0.045     0.023     0.023
 #> 6          conference 0.004   0.000      0.001     0.005     0.020
 ```
 
@@ -113,7 +113,7 @@ c(
   glmm_dist  = mape(dist_shares[promo],   true_shares)
 )
 #>    treemmm glmm_naive  glmm_orcl  glmm_dist 
-#>  0.8329511  0.1736835  0.1589810  0.1978675
+#>  0.2298117  0.1736835  0.1589810  0.1978675
 ```
 
 At small scale results are noisy. The Python paper’s headline values

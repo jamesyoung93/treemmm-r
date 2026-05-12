@@ -148,11 +148,11 @@ with the planted DGP reference share:</p>
 <span><span class="op">)</span></span>
 <span><span class="va">cmp</span></span>
 <span><span class="co">#&gt;               channel truth treemmm glmm_naive glmm_orcl glmm_dist</span></span>
-<span><span class="co">#&gt; 1          rep_visits 0.361   0.084      0.347     0.427     0.282</span></span>
-<span><span class="co">#&gt; 2     dtc_advertising 0.190   0.034      0.225     0.193     0.241</span></span>
-<span><span class="co">#&gt; 3             samples 0.305   0.060      0.279     0.290     0.299</span></span>
-<span><span class="co">#&gt; 4       peer_programs 0.053   0.008      0.077     0.059     0.056</span></span>
-<span><span class="co">#&gt; 5 digital_impressions 0.040   0.003      0.045     0.023     0.023</span></span>
+<span><span class="co">#&gt; 1          rep_visits 0.361   0.424      0.347     0.427     0.282</span></span>
+<span><span class="co">#&gt; 2     dtc_advertising 0.190   0.172      0.225     0.193     0.241</span></span>
+<span><span class="co">#&gt; 3             samples 0.305   0.302      0.279     0.290     0.299</span></span>
+<span><span class="co">#&gt; 4       peer_programs 0.053   0.039      0.077     0.059     0.056</span></span>
+<span><span class="co">#&gt; 5 digital_impressions 0.040   0.016      0.045     0.023     0.023</span></span>
 <span><span class="co">#&gt; 6          conference 0.004   0.000      0.001     0.005     0.020</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -171,7 +171,7 @@ with the planted DGP reference share:</p>
 <span>  glmm_dist  <span class="op">=</span> <span class="fu">mape</span><span class="op">(</span><span class="va">dist_shares</span><span class="op">[</span><span class="va">promo</span><span class="op">]</span>,   <span class="va">true_shares</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">#&gt;    treemmm glmm_naive  glmm_orcl  glmm_dist </span></span>
-<span><span class="co">#&gt;  0.8329511  0.1736835  0.1589810  0.1978675</span></span></code></pre></div>
+<span><span class="co">#&gt;  0.2298117  0.1736835  0.1589810  0.1978675</span></span></code></pre></div>
 <p>At small scale results are noisy. The Python paper’s headline values
 (3,000 customers x 36 months, N=5 seeds) are TreeMMM 17.9 +/- 0.2 vs.
 GLMM-Naive 22.2 +/- 0.3.</p>
