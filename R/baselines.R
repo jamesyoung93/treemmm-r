@@ -74,7 +74,7 @@
 #' @param df A `data.frame` or `data.table` panel.
 #' @param config A [run_config()] object.
 #' @return A list with `$model`, `$attribution_shares`, `$formula`, `$objective`.
-#' @noRd
+#' @export
 fit_glmm_naive <- function(df, config) {
   if (!requireNamespace("lme4", quietly = TRUE)) {
     stop("Requires 'lme4'. Install via install.packages('lme4').")
@@ -117,7 +117,7 @@ fit_glmm_naive <- function(df, config) {
 #' @param planted_interactions List of [interaction_spec()] objects (typically
 #'   `ground_truth$interactions`).
 #' @return Same structure as [fit_glmm_naive()].
-#' @noRd
+#' @export
 fit_glmm_oracle <- function(df, config, planted_interactions) {
   if (!requireNamespace("lme4", quietly = TRUE)) {
     stop("Requires 'lme4'. Install via install.packages('lme4').")
@@ -163,7 +163,7 @@ fit_glmm_oracle <- function(df, config, planted_interactions) {
 #' @param config A [run_config()] object.
 #' @param family_override Optional `family` object to use directly.
 #' @return A list with `$model`, `$attribution_shares`, `$formula`, `$family`.
-#' @noRd
+#' @export
 fit_glmm_distributional <- function(df, config, family_override = NULL) {
   prepared <- prepare_data(df, config)
   cs <- config$columns
@@ -204,7 +204,7 @@ fit_glmm_distributional <- function(df, config, family_override = NULL) {
 # ---------------------------------------------------------------------------
 
 #' Fit the GLMMDist-Oracle baseline (distributional GLM + planted interactions)
-#' @noRd
+#' @export
 fit_glmm_distributional_oracle <- function(df, config, planted_interactions,
                                            family_override = NULL) {
   prepared <- prepare_data(df, config)
@@ -260,7 +260,7 @@ fit_glmm_distributional_oracle <- function(df, config, planted_interactions,
 #' @param n_iter Number of MCMC iterations per chain (including warmup). Default 1000.
 #' @return A list with `$model` (a brmsfit), `$attribution_shares`,
 #'   `$formula`, `$objective`.
-#' @noRd
+#' @export
 fit_bayesian_hier_naive <- function(df, config,
                                     n_chains = 2L, n_iter = 1000L) {
   if (!requireNamespace("brms", quietly = TRUE)) {
@@ -296,7 +296,7 @@ fit_bayesian_hier_naive <- function(df, config,
 }
 
 #' Fit the PyMC-Hier-Oracle baseline via brms (+ planted interactions)
-#' @noRd
+#' @export
 fit_bayesian_hier_oracle <- function(df, config, planted_interactions,
                                      n_chains = 2L, n_iter = 1000L) {
   if (!requireNamespace("brms", quietly = TRUE)) {
@@ -378,7 +378,7 @@ fit_bayesian_hier_oracle <- function(df, config, planted_interactions,
 #' @param config A [run_config()] object.
 #' @param n_interactions Number of top SHAP-derived interaction pairs to keep.
 #' @return Same structure as [fit_glmm_naive()] plus `$discovered_interactions`.
-#' @noRd
+#' @export
 fit_glmm_hybrid <- function(df, config, n_interactions = 3L) {
   if (!requireNamespace("lme4", quietly = TRUE)) {
     stop("Requires 'lme4'. Install via install.packages('lme4').")
