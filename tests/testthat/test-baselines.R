@@ -101,7 +101,5 @@ test_that("Bayesian baselines fail gracefully when brms is missing", {
   expect_error(fit_bayesian_hier_naive(ds$df, cfg), "Requires 'brms'")
 })
 
-test_that("hybrid GLMM stub points at Phase 5", {
-  expect_error(fit_glmm_hybrid(data.frame(), list()),
-               "Not yet implemented \\(Phase 5\\)")
-})
+# Phase 5 has implemented fit_glmm_hybrid; the working test for it lives in
+# tests/testthat/test-mroi-diagnostics.R.

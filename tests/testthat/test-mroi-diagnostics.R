@@ -44,9 +44,13 @@ test_that("variation_decomposition splits into within and between shares", {
 })
 
 test_that("tree_ess_per_param diagnostic labels match thresholds", {
-  expect_equal(tree_ess_per_param(100000, 100L, 4L)$diagnostic, "adequate")
-  expect_equal(tree_ess_per_param(160L,   100L, 4L)$diagnostic, "weak")
-  expect_equal(tree_ess_per_param(10L,    100L, 4L)$diagnostic, "insufficient")
+  # n_params = n_estimators * 2^max_depth = 100 * 16 = 1600
+  # adequate  ess >= 20  ->  n_train >= 32000
+  # weak      10 <= ess < 20  ->  16000 <= n_train < 32000
+  # insufficient  ess < 10  ->  n_train < 16000
+  expect_equal(tree_ess_per_param(100000L, 100L, 4L)$diagnostic, "adequate")
+  expect_equal(tree_ess_per_param(20000L,  100L, 4L)$diagnostic, "weak")
+  expect_equal(tree_ess_per_param(1000L,   100L, 4L)$diagnostic, "insufficient")
 })
 
 test_that("coverage_check reports an extrapolation_fraction in [0, 1]", {
