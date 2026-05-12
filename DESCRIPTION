@@ -1,0 +1,44 @@
+Package: treemmm
+Type: Package
+Title: Tree-Based Marketing Mix Modeling with SHAP Attribution
+Version: 0.2.1.9000
+Date: 2026-05-11
+Authors@R:
+    person("James", "Young",
+           email = "james.young@ucb.com",
+           role = c("aut", "cre"))
+Description: Tree-based Marketing Mix Modeling (MMM) using gradient-boosted
+    trees (LightGBM, XGBoost) paired with SHAP attribution for promotional
+    channel decomposition on customer-level panel data. Automatically
+    discovers non-linear response functions, channel interactions, and
+    heterogeneous customer sensitivity without requiring the analyst to
+    pre-specify functional forms. R port of the Python implementation;
+    see <https://github.com/jamesyoung93/treemmm> for the original package
+    and accompanying paper.
+License: MIT + file LICENSE
+URL: https://github.com/jamesyoung93/treemmm-r
+BugReports: https://github.com/jamesyoung93/treemmm-r/issues
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Depends:
+    R (>= 4.1)
+Imports:
+    data.table,
+    stats,
+    utils
+Suggests:
+    lightgbm,
+    xgboost,
+    treeshap,
+    lme4,
+    brms,
+    cmdstanr,
+    mlr3tuning,
+    ggplot2,
+    testthat (>= 3.0.0),
+    knitr,
+    rmarkdown
+Config/testthat/edition: 3
+VignetteBuilder: knitr
