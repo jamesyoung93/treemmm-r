@@ -119,28 +119,5 @@ build_monotone_constraints <- function(feature_cols, promo_vars) {
   ifelse(feature_cols %in% promo_vars, 1L, 0L)
 }
 
-# ---- Stubs for later phases ----------------------------------------------
-# Naive GLMM via {lme4}: main effects only, per-customer random intercept.
-fit_glmm_naive <- function(X_train, y_train, config) {
-  stop("Not yet implemented (Phase 4). See ROADMAP.md.")
-}
-# Oracle GLMM via {lme4}: main effects + planted interactions.
-fit_glmm_oracle <- function(X_train, y_train, config, planted_interactions) {
-  stop("Not yet implemented (Phase 4). See ROADMAP.md.")
-}
-# Distributional GLM via base stats::glm.
-fit_glmm_distributional <- function(X_train, y_train, config, family) {
-  stop("Not yet implemented (Phase 4). See ROADMAP.md.")
-}
-# Customer-level hierarchical Bayesian baseline via {brms}.
-fit_bayesian_hier_naive <- function(X_train, y_train, config) {
-  stop("Not yet implemented (Phase 4). See ROADMAP.md.")
-}
-fit_bayesian_hier_oracle <- function(X_train, y_train, config,
-                                     planted_interactions) {
-  stop("Not yet implemented (Phase 4). See ROADMAP.md.")
-}
-# Tree-to-GLMM hybrid.
-fit_glmm_hybrid <- function(X_train, y_train, config) {
-  stop("Not yet implemented (Phase 4). See ROADMAP.md.")
-}
+# Baseline fitters (GLMM-Naive/Oracle, GLMMDist, PyMC-Hier-Naive/Oracle, hybrid)
+# live in R/baselines.R as of Phase 4.
