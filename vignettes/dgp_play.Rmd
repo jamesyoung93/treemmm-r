@@ -1,0 +1,140 @@
+---
+title: "Playing with the DGP"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Playing with the DGP}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = TRUE
+)
+```
+
+# Inspecting and tuning the synthetic DGPs
+
+TreeMMM ships with six synthetic DGPs, each parameterizable along the same
+axes: number of customers, number of periods, random seed, and (for some)
+adstock decay. This vignette shows how to inspect what each DGP plants and
+how to tune the knobs.
+
+## Available DGPs
+
+```{r}
+library(treemmm)
+
+# Four headline DGPs
+ds_pharma <- generate_pharma_dataset(n_customers = 30, n_periods = 12)
+ds_cpg    <- generate_cpg_dataset(n_customers = 30, n_periods = 12)
+ds_saas   <- generate_saas_dataset(n_customers = 30, n_periods = 12)
+ds_lin    <- generate_linear_dataset(n_customers = 30, n_periods = 12)
+
+# Two specialty DGPs
+ds_adstock <- generate_pharma_adstock_dataset(n_customers = 30, n_periods = 12)
+ds_geo     <- generate_geo_panel_dataset(n_regions = 30, n_weeks = 12)
+
+# Each returns the same structure
+lapply(list(ds_pharma, ds_cpg, ds_saas, ds_lin),
+       function(d) c(rows = nrow(d$df), channels = length(d$columns$promo_vars)))
+```
+
+## Inspecting the planted truth
+
+`ground_truth$attribution_shares` is the reference each model is benchmarked
+against:
+
+```{r}
+sort(unlist(ds_pharma$ground_truth$attribution_shares), decreasing = TRUE)
+```
+
+`ground_truth$customer_sensitivities` gives the per-customer per-channel
+sensitivity vector drawn from each segment's multivariate normal:
+
+```{r}
+str(head(ds_pharma$ground_truth$customer_sensitivities, 2))
+```
+
+`ground_truth$interactions` lists the planted channel interactions:
+
+```{r}
+ds_pharma$ground_truth$interactions
+```
+
+## Heterogeneous customer sensitivity (HCS)
+
+The pharma DGP plants a rheumatology/dermatology split. The mean
+sensitivity vectors per segment determine the spread:
+
+```{r}
+sens <- ds_pharma$ground_truth$customer_sensitivities
+
+# Rheum vs derm rep_visits sensitivity
+rheum_cids <- ds_pharma$df[specialty == "rheumatology", unique(customer_id)]
+derm_cids  <- ds_pharma$df[specialty == "dermatology",  unique(customer_id)]
+
+rheum_rep <- vapply(rheum_cids, function(id) sens[[id]][["rep_visits"]],
+                    numeric(1))
+derm_rep  <- vapply(derm_cids,  function(id) sens[[id]][["rep_visits"]],
+                    numeric(1))
+
+c(rheum_mean = mean(rheum_rep), derm_mean = mean(derm_rep))
+```
+
+The DGP plants rheum mean 1.6 / derm mean 0.4 for rep_visits, so at any
+nontrivial sample size the segment means should differ by roughly that
+amount.
+
+## Tuning sample size
+
+The default sizes are small for fast tests. Headline-scale defaults match
+the Python paper benchmark (3,000 x 36):
+
+```{r, eval = FALSE}
+# Headline scale (slow!  this is the actual paper scale)
+ds_full <- generate_pharma_dataset(
+  n_customers  = 3000,
+  n_periods    = 36,
+  random_state = 42
+)
+```
+
+## Tuning the random seed
+
+Two runs at the same seed produce identical panels:
+
+```{r}
+a <- generate_pharma_dataset(n_customers = 20, n_periods = 6, random_state = 7)
+b <- generate_pharma_dataset(n_customers = 20, n_periods = 6, random_state = 7)
+identical(a$df, b$df)
+```
+
+Different seeds produce different panels but the planted attribution
+shares converge to the same values at scale (Monte Carlo error
+diminishes with `n_customers x n_periods`).
+
+## Adstock variant
+
+The pharma-with-adstock DGP plants geometric carryover on each channel.
+The raw and adstocked values are both available:
+
+```{r}
+ds_adstock$columns$adstock_decays
+head(ds_adstock$df[, .(customer_id, period, rep_visits, rep_visits_raw)])
+```
+
+The model sees `rep_visits` (the cumulative-exposure column); the analyst
+can inspect `rep_visits_raw` to verify the carryover was planted as
+expected.
+
+## Reproducibility caveat across R and Python
+
+R's Mersenne Twister and Python's PCG64 produce different samples at the
+same numeric seed. The DGP coefficients and structural form match the
+Python implementation exactly; the planted reference attribution shares
+converge to the Python ones within Monte Carlo error (< 0.5 pp at
+headline scale). See `SPEC.md` in the repo for the formal specification
+both implementations target.

@@ -1,0 +1,105 @@
+---
+title: "TreeMMM Quickstart"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{TreeMMM Quickstart}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment  = "#>",
+  eval     = requireNamespace("lightgbm", quietly = TRUE)
+)
+```
+
+# A five-minute tour of TreeMMM
+
+TreeMMM is a tree-based Marketing Mix Modeling tool. Given a panel of
+customer-by-period observations and a set of promotional columns, it
+fits a gradient-boosted tree model, computes SHAP-derived attribution
+shares per promotional channel, and produces marginal-ROI response curves.
+
+This vignette walks through the smallest end-to-end run.
+
+## Generate a synthetic panel
+
+The package ships with six synthetic data-generating processes (DGPs)
+with known ground truth. We use the pharma DGP at a small scale:
+
+```{r}
+library(treemmm)
+
+ds <- generate_pharma_dataset(
+  n_customers  = 50,
+  n_periods    = 12,
+  random_state = 42
+)
+
+# The result is a list with three elements:
+names(ds)
+```
+
+`ds$df` is the panel; `ds$columns` is the role mapping; `ds$ground_truth`
+contains the planted attribution shares (the answer the model is trying
+to recover):
+
+```{r}
+head(ds$df)
+ds$columns
+ds$ground_truth$attribution_shares
+```
+
+## Configure the pipeline
+
+`run_config()` packages the pipeline parameters; `column_spec()` describes
+which column plays which role. The defaults pick a sensible objective
+based on the outcome distribution.
+
+```{r}
+cfg <- run_config(
+  columns = column_spec(
+    customer_id  = ds$columns$customer_id,
+    time_col     = ds$columns$time_col,
+    outcome_col  = ds$columns$outcome_col,
+    promo_vars   = ds$columns$promo_vars,
+    control_vars = ds$columns$control_vars
+  ),
+  objective       = "auto",
+  n_optuna_trials = 2L,
+  n_folds         = 3L,
+  min_train_frac  = 0.5,
+  random_state    = 42L
+)
+```
+
+## Run
+
+```{r}
+result <- treemmm_run(ds$df, cfg)
+```
+
+## Inspect the result
+
+The recovered attribution shares per channel:
+
+```{r}
+sort(unlist(result$attribution_shares), decreasing = TRUE)
+```
+
+Per-fold performance metrics:
+
+```{r}
+do.call(rbind, lapply(result$fold_metrics, as.data.frame))
+```
+
+## What next
+
+* See `vignette("benchmark")` for a head-to-head comparison against
+  the GLMM-Naive and GLMM-Oracle baselines.
+* See `vignette("dgp_play")` for how to tune DGP parameters and
+  inspect the planted ground truth.
+* `simulate_response()` and `mroi_ranking()` show how to read marginal
+  ROI off the fitted model.

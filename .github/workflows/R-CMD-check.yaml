@@ -21,6 +21,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: r-lib/actions/setup-pandoc@v2
+
       - uses: r-lib/actions/setup-r@v2
         with:
           r-version: 'release'
@@ -28,13 +30,18 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          # Phase 1 scaffold: install only hard dependencies (Depends + Imports).
-          # Suggests (lightgbm, brms, cmdstanr, treeshap, etc.) require toolchains
-          # and Stan installation; they come online in later phases when actually used.
           dependencies: '"hard"'
           extra-packages: |
             any::rcmdcheck
             any::testthat
+            any::roxygen2
+            any::knitr
+            any::rmarkdown
+
+      - name: Generate man pages with roxygen2
+        run: |
+          roxygen2::roxygenize(load_code = roxygen2::load_pkgload)
+        shell: Rscript {0}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
