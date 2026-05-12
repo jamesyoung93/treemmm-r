@@ -13,3 +13,4 @@ output/
 .DS_Store
 treemmm_*.tar.gz
 treemmm.Rcheck/
+inst/verify/benchmark_results.rds

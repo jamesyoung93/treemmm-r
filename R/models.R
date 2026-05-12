@@ -39,14 +39,24 @@ fit_lightgbm <- function(X_train, y_train,
     base_params$monotone_constraints <- monotone_constraints
   }
 
-  # Conservative grid: shallow trees + strong regularization produce more
-  # stable SHAP values and better attribution recovery on small panels.
+  # Conservative grid: shallow trees + strong regularization + bagging +
+  # column subsampling produce stable SHAP values and accurate attribution
+  # recovery. Mirrors the conservative end of Python's Optuna search space
+  # (lightgbm_model._suggest_params): the L1/L2 regularization and bagging
+  # fractions are essential for additive-DGP recovery — without them the
+  # trees absorb noise into SHAP and attribution shares smear across
+  # features.
   grid <- expand.grid(
     n_estimators      = c(150L, 250L),
     max_depth         = c(3L, 5L),
     learning_rate     = c(0.05),
     num_leaves        = c(15L),
-    min_data_in_leaf  = c(80L)
+    min_data_in_leaf  = c(80L),
+    feature_fraction  = c(0.75),
+    bagging_fraction  = c(0.75),
+    bagging_freq      = c(5L),
+    lambda_l1         = c(2.0),
+    lambda_l2         = c(2.0)
   )
   grid <- grid[seq_len(min(n_trials, nrow(grid))), , drop = FALSE]
 
@@ -56,7 +66,12 @@ fit_lightgbm <- function(X_train, y_train,
       learning_rate    = grid$learning_rate[i],
       max_depth        = grid$max_depth[i],
       num_leaves       = grid$num_leaves[i],
-      min_data_in_leaf = grid$min_data_in_leaf[i]
+      min_data_in_leaf = grid$min_data_in_leaf[i],
+      feature_fraction = grid$feature_fraction[i],
+      bagging_fraction = grid$bagging_fraction[i],
+      bagging_freq     = grid$bagging_freq[i],
+      lambda_l1        = grid$lambda_l1[i],
+      lambda_l2        = grid$lambda_l2[i]
     ))
 
     dtrain <- lightgbm::lgb.Dataset(X_mat, label = y_train)

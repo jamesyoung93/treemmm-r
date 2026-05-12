@@ -61,16 +61,27 @@ requires a long-format `data.frame` with one row per (customer, period).
 See `vignette("quickstart")`, `vignette("benchmark")`, and
 `vignette("dgp_play")` for longer walk-throughs.
 
-## Verification target
+## Verification
 
-The R port aims to reproduce the headline attribution-share MAPE from the Python paper within multi-seed standard error. At Phase 7, this README will display the side-by-side numbers.
+Attribution-share MAPE at full scale (n=3000 customers × 36 periods, Python's
+`_promo_only_shares` renormalization, `min_share = 0.005` filter):
 
-| DGP | Python (N=5 seeds) | R-port goal |
+| DGP | Python (N=5 seeds) | R port (N=3 seeds) |
 |---|---|---|
-| Pharma (NegBin) | 17.9% ± 0.2% | within ± 0.5% |
-| CPG (Tweedie)   | 22.5% ± 0.3% | within ± 0.5% |
-| SaaS (ZI-Gamma) | 16.7% ± 0.2% | within ± 0.5% |
-| Linear (Gaussian) | 0.4% ± 0.1% | within ± 0.2% |
+| Pharma (NegBin)   | 17.9% ± 0.2% | 16.6% ± 0.6% |
+| CPG (Tweedie)     | 22.5% ± 0.3% | 25.6% ± 0.3% |
+| SaaS (ZI-Gamma)   | 16.7% ± 0.2% | 18.4% ± 0.1% |
+| Linear (Gaussian) |  0.4% ± 0.1% |  6.9% ± 0.6% |
+
+Pharma reproduces within standard error. CPG and SaaS land 2–3pp wide of
+Python. The Linear gap is the largest: trees redistribute ~5% of mass from
+the dominant channel to weaker ones on each seed, which the fixed-grid
+LightGBM search in v0.2.1 doesn't tune away. Closing it requires
+Optuna-equivalent hyperparameter search; `mlr3tuning` integration is
+deferred to a future release.
+
+Re-run the verification yourself with
+`Rscript inst/verify/benchmark_all_dgps.R` (~6 min on a laptop).
 
 ## How this differs from the Python package
 
