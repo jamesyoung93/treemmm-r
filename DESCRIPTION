@@ -34,11 +34,12 @@ Suggests:
     treeshap,
     lme4,
     brms,
-    cmdstanr,
     mlr3tuning,
     ggplot2,
     testthat (>= 3.0.0),
     knitr,
     rmarkdown
+Additional_repositories:
+    https://stan-dev.r-universe.dev
 Config/testthat/edition: 3
 VignetteBuilder: knitr
