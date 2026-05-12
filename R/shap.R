@@ -15,10 +15,19 @@ compute_shap <- function(model, X, link = c("identity", "log")) {
   }
   storage.mode(X_mat) <- "double"
 
-  # type = "contrib" returns a matrix with one column per feature plus a
-  # final "bias" column (the expected base value). The older `predcontrib`
-  # argument was removed in lightgbm 4.x.
-  contrib <- stats::predict(model, X_mat, type = "contrib")
+  # lightgbm 4.x uses `type = "contrib"`; lightgbm 3.x used
+  # `predcontrib = TRUE`. Dispatch on the installed version so the
+  # package works with both.
+  lgbm_ver <- if (requireNamespace("lightgbm", quietly = TRUE)) {
+    utils::packageVersion("lightgbm")
+  } else {
+    package_version("0.0.0")
+  }
+  contrib <- if (lgbm_ver >= package_version("4.0.0")) {
+    stats::predict(model, X_mat, type = "contrib")
+  } else {
+    stats::predict(model, X_mat, predcontrib = TRUE)
+  }
   if (!is.matrix(contrib)) contrib <- as.matrix(contrib)
 
   n_features <- ncol(X_mat)
