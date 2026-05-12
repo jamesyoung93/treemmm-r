@@ -1,7 +1,7 @@
 Package: treemmm
 Type: Package
 Title: Tree-Based Marketing Mix Modeling with SHAP Attribution
-Version: 0.2.2.9000
+Version: 0.3.0.9000
 Date: 2026-05-12
 Authors@R:
     person("James", "Young",
@@ -26,10 +26,10 @@ Depends:
     R (>= 4.1)
 Imports:
     data.table,
+    lightgbm,
     stats,
     utils
 Suggests:
-    lightgbm,
     xgboost,
     treeshap,
     lme4,

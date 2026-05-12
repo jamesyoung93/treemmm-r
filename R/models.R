@@ -1,61 +1,146 @@
-# Model wrappers. Each exposes the same interface:
-#   model <- fit_<name>(X_train, y_train, config)
-#   y_hat <- predict(model, X_test)
+# Model wrappers. Each exposes a common interface:
+#   result <- fit_<name>(X_train, y_train, ...)
+#   result$model        the fitted model
+#   result$best_params  the chosen hyperparameter set
 # Mirrors treemmm.core.models.* in the Python package.
-# TODO Phase 3-4: implement each fitter.
 
-# LightGBM (via {lightgbm} R package) with monotone constraints + a fixed
-# grid hyperparameter search. The Python version uses Optuna; the R version
-# uses a documented grid for v0.2.1 and defers {mlr3tuning} integration.
-# TODO Phase 3.
-fit_lightgbm <- function(X_train, y_train, config, monotone_constraints = NULL) {
-  stop("Not yet implemented (Phase 3). See ROADMAP.md.")
+# LightGBM with monotone constraints + fixed-grid hyperparameter search.
+# The Python implementation uses Optuna (TPE); the R port uses a small
+# grid for v0.2.2. {mlr3tuning} integration is deferred.
+fit_lightgbm <- function(X_train, y_train,
+                         X_val = NULL, y_val = NULL,
+                         objective = "regression",
+                         tweedie_variance_power = 1.5,
+                         monotone_constraints = NULL,
+                         n_trials = 4L,
+                         random_state = 42L) {
+  if (!requireNamespace("lightgbm", quietly = TRUE)) {
+    stop("The {lightgbm} package is required to fit LightGBM models. ",
+         "Install with install.packages('lightgbm').")
+  }
+
+  X_mat <- if (is.data.frame(X_train)) as.matrix(X_train) else X_train
+  storage.mode(X_mat) <- "double"
+
+  base_params <- list(
+    objective       = objective,
+    metric          = "rmse",
+    verbosity       = -1L,
+    num_threads     = 0L,
+    seed            = random_state,
+    feature_fraction_seed = random_state,
+    bagging_seed    = random_state,
+    deterministic   = TRUE
+  )
+  if (objective == "tweedie") {
+    base_params$tweedie_variance_power <- tweedie_variance_power
+  }
+  if (!is.null(monotone_constraints)) {
+    base_params$monotone_constraints <- monotone_constraints
+  }
+
+  # Conservative grid: shallow trees + strong regularization produce more
+  # stable SHAP values and better attribution recovery on small panels.
+  grid <- expand.grid(
+    n_estimators      = c(150L, 250L),
+    max_depth         = c(3L, 5L),
+    learning_rate     = c(0.05),
+    num_leaves        = c(15L),
+    min_data_in_leaf  = c(80L)
+  )
+  grid <- grid[seq_len(min(n_trials, nrow(grid))), , drop = FALSE]
+
+  best <- list(score = Inf, model = NULL, params = NULL)
+  for (i in seq_len(nrow(grid))) {
+    params <- modifyList(base_params, list(
+      learning_rate    = grid$learning_rate[i],
+      max_depth        = grid$max_depth[i],
+      num_leaves       = grid$num_leaves[i],
+      min_data_in_leaf = grid$min_data_in_leaf[i]
+    ))
+
+    dtrain <- lightgbm::lgb.Dataset(X_mat, label = y_train)
+    model <- suppressWarnings(suppressMessages(
+      lightgbm::lgb.train(
+        params  = params,
+        data    = dtrain,
+        nrounds = grid$n_estimators[i],
+        verbose = -1L
+      )
+    ))
+
+    score <- if (!is.null(X_val) && !is.null(y_val)) {
+      X_val_mat <- if (is.data.frame(X_val)) as.matrix(X_val) else X_val
+      storage.mode(X_val_mat) <- "double"
+      preds <- stats::predict(model, X_val_mat)
+      .deviance(y_val, preds, objective, tweedie_variance_power)
+    } else {
+      0  # no validation -> first fit wins (n_trials should be 1)
+    }
+
+    if (score < best$score) {
+      best <- list(score = score, model = model, params = params)
+    }
+  }
+
+  best
 }
 
-# XGBoost (via {xgboost} R package). Optional alternative to LightGBM.
-# TODO Phase 3.
-fit_xgboost <- function(X_train, y_train, config, monotone_constraints = NULL) {
-  stop("Not yet implemented (Phase 3). See ROADMAP.md.")
+# Per-objective deviance for hyperparameter scoring.
+.deviance <- function(y, y_hat, objective, tweedie_power) {
+  eps <- 1e-10
+  y_hat <- pmax(y_hat, eps)
+  if (objective == "regression") {
+    return(mean((y - y_hat) ^ 2))
+  }
+  if (objective == "poisson") {
+    safe_y <- pmax(y, eps)
+    return(2 * mean(y * log(safe_y / y_hat) - (y - y_hat)))
+  }
+  if (objective == "tweedie") {
+    p <- tweedie_power
+    if (abs(p - 1) < 1e-9) return(mean((y - y_hat) ^ 2))
+    term1 <- ifelse(y > 0, y ^ (2 - p) / ((1 - p) * (2 - p)), 0)
+    term2 <- y * y_hat ^ (1 - p) / (1 - p)
+    term3 <- y_hat ^ (2 - p) / (2 - p)
+    dev <- ifelse(y > 0, term1 - term2 + term3, term3)
+    return(2 * mean(dev))
+  }
+  if (objective == "gamma") {
+    safe_y <- pmax(y, eps)
+    return(2 * mean(-log(safe_y / y_hat) + (y - y_hat) / y_hat))
+  }
+  mean((y - y_hat) ^ 2)
 }
 
-# Naive GLMM via {lme4}: main effects only, per-customer random intercept,
-# log1p outcome transform for count-valued DGPs.
-# TODO Phase 4.
+# Build the monotone-constraints vector: +1 for each promo channel, 0 for
+# every other feature column. Column order must match `feature_cols`.
+build_monotone_constraints <- function(feature_cols, promo_vars) {
+  ifelse(feature_cols %in% promo_vars, 1L, 0L)
+}
+
+# ---- Stubs for later phases ----------------------------------------------
+# Naive GLMM via {lme4}: main effects only, per-customer random intercept.
 fit_glmm_naive <- function(X_train, y_train, config) {
   stop("Not yet implemented (Phase 4). See ROADMAP.md.")
 }
-
-# Oracle GLMM via {lme4}: identical to glmm_naive but with planted
-# interactions added as fixed effects. For benchmark-only use.
-# TODO Phase 4.
+# Oracle GLMM via {lme4}: main effects + planted interactions.
 fit_glmm_oracle <- function(X_train, y_train, config, planted_interactions) {
   stop("Not yet implemented (Phase 4). See ROADMAP.md.")
 }
-
-# Distributional GLM via base {stats}::glm with the correct exponential-family
-# likelihood per DGP (Poisson / Tweedie / Gamma / Gaussian).
-# TODO Phase 4.
+# Distributional GLM via base stats::glm.
 fit_glmm_distributional <- function(X_train, y_train, config, family) {
   stop("Not yet implemented (Phase 4). See ROADMAP.md.")
 }
-
-# Naive customer-level hierarchical Bayesian baseline via {brms}.
-# Compiles via Stan; default sampler cmdstanr.
-# TODO Phase 4.
+# Customer-level hierarchical Bayesian baseline via {brms}.
 fit_bayesian_hier_naive <- function(X_train, y_train, config) {
   stop("Not yet implemented (Phase 4). See ROADMAP.md.")
 }
-
-# Oracle customer-level hierarchical Bayesian baseline. Same as the naive
-# variant with planted interaction terms.
-# TODO Phase 4.
-fit_bayesian_hier_oracle <- function(X_train, y_train, config, planted_interactions) {
+fit_bayesian_hier_oracle <- function(X_train, y_train, config,
+                                     planted_interactions) {
   stop("Not yet implemented (Phase 4). See ROADMAP.md.")
 }
-
-# Tree-to-GLMM hybrid: fits a tree, extracts learned interactions, then
-# refits a GLMM with those interactions as fixed effects.
-# TODO Phase 4.
+# Tree-to-GLMM hybrid.
 fit_glmm_hybrid <- function(X_train, y_train, config) {
   stop("Not yet implemented (Phase 4). See ROADMAP.md.")
 }
