@@ -43,6 +43,16 @@ reference:
       - generate_linear_dataset
       - generate_pharma_adstock_dataset
       - generate_geo_panel_dataset
+  - title: Baselines
+    desc: Regression and Bayesian baseline fitters for benchmark comparison.
+    contents:
+      - fit_glmm_naive
+      - fit_glmm_oracle
+      - fit_glmm_distributional
+      - fit_glmm_distributional_oracle
+      - fit_bayesian_hier_naive
+      - fit_bayesian_hier_oracle
+      - fit_glmm_hybrid
   - title: Marginal ROI
     desc: Response-curve sweeps, mROI ranking, and budget reallocation.
     contents:
