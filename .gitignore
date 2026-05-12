@@ -1,0 +1,15 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+src/*.o
+src/*.so
+src/*.dll
+docs/
+inst/doc/
+*.knit.md
+*.utf8.md
+output/
+.DS_Store
+treemmm_*.tar.gz
+treemmm.Rcheck/

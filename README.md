@@ -1,0 +1,89 @@
+# treemmm-r
+
+**R port of [TreeMMM](https://github.com/jamesyoung93/treemmm)** — tree-based Marketing Mix Modeling with SHAP attribution for customer-level panel data.
+
+*Status: v0.2.1.9000 (Phase 1 — scaffold). Phases 2–7 implement the core pipeline, baselines, and benchmarks. See [`ROADMAP.md`](ROADMAP.md).*
+
+This is the R companion to the Python TreeMMM package. The goal is feature parity for R users who want to verify, extend, or run TreeMMM in their existing R analytics stack. The original paper and Python implementation: https://github.com/jamesyoung93/treemmm
+
+## Installation
+
+```r
+# devtools::install_github not required after v0.2.1 ships:
+devtools::install_github("jamesyoung93/treemmm-r")
+```
+
+## Quickstart (target API, not yet implemented)
+
+```r
+library(treemmm)
+
+# Generate the pharma synthetic DGP (3,000 HCPs x 36 months at headline scale)
+ds <- generate_pharma_dataset(
+  n_customers = 500,
+  n_periods   = 24,
+  random_state = 42
+)
+
+# Configure the pipeline
+config <- run_config(
+  columns = column_spec(
+    customer_id  = "hcp_id",
+    time_col     = "month",
+    outcome_col  = "new_patients",
+    promo_vars   = c("rep_visits", "dtc_advertising", "samples",
+                     "peer_programs", "digital_impressions", "conference"),
+    control_vars = c("seasonality", "market_index")
+  ),
+  objective = "auto"   # auto-detects Poisson/Tweedie/Gamma/Gaussian
+)
+
+# Run the pipeline
+result <- treemmm_run(ds$df, config)
+print(result$attribution_shares)
+```
+
+## Verification target
+
+The R port aims to reproduce the headline attribution-share MAPE from the Python paper within multi-seed standard error. At Phase 7, this README will display the side-by-side numbers.
+
+| DGP | Python (N=5 seeds) | R-port goal |
+|---|---|---|
+| Pharma (NegBin) | 17.9% ± 0.2% | within ± 0.5% |
+| CPG (Tweedie)   | 22.5% ± 0.3% | within ± 0.5% |
+| SaaS (ZI-Gamma) | 16.7% ± 0.2% | within ± 0.5% |
+| Linear (Gaussian) | 0.4% ± 0.1% | within ± 0.2% |
+
+## How this differs from the Python package
+
+| Component | Python | R |
+|---|---|---|
+| GBT engine | LightGBM (Python bindings) | `lightgbm` R package |
+| SHAP | `shap.TreeExplainer` | `treeshap` |
+| Hyperparameter search | Optuna (TPE) | fixed grid for v0.2.1; `mlr3tuning` deferred |
+| Mixed-effects baseline | `statsmodels.MixedLM` | `lme4::lmer` |
+| Bayesian baseline | PyMC + nutpie | `brms` (Stan) |
+| Panel manipulation | pandas | `data.table` |
+| Figures | matplotlib | `ggplot2` |
+
+The DGP math is identical — see [`SPEC.md`](SPEC.md) for the formal specification both packages target.
+
+## License
+
+MIT (see [LICENSE](LICENSE)).
+
+## Citation
+
+If you use TreeMMM in academic work, please cite the preprint:
+
+```bibtex
+@article{young2026treemmm,
+  title   = {TreeMMM: Tree-Based Marketing Mix Modeling with SHAP Attribution and Automatic Interaction Discovery},
+  author  = {Young, James},
+  journal = {arXiv preprint arXiv:ARXIV_ID},
+  year    = {2026},
+  note    = {Submitted to the International Journal of Forecasting.
+             Python: \url{https://github.com/jamesyoung93/treemmm};
+             R port: \url{https://github.com/jamesyoung93/treemmm-r}.}
+}
+```
