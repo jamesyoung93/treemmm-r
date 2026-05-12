@@ -1,0 +1,59 @@
+url: https://jamesyoung93.github.io/treemmm-r/
+
+template:
+  bootstrap: 5
+
+home:
+  links:
+    - text: Python implementation
+      href: https://github.com/jamesyoung93/treemmm
+    - text: Specification both implementations target
+      href: https://github.com/jamesyoung93/treemmm-r/blob/main/SPEC.md
+
+navbar:
+  structure:
+    left:  [intro, reference, articles, news]
+    right: [github]
+
+articles:
+  - title: Get started
+    navbar: ~
+    contents:
+      - quickstart
+  - title: Examples
+    navbar: Examples
+    contents:
+      - benchmark
+      - dgp_play
+
+reference:
+  - title: Pipeline
+    desc: Configure and run TreeMMM end-to-end.
+    contents:
+      - run_config
+      - column_spec
+      - treemmm_run
+      - diagnose_distribution
+  - title: Synthetic DGPs
+    desc: Reproducible panel data with known ground truth.
+    contents:
+      - generate_pharma_dataset
+      - generate_cpg_dataset
+      - generate_saas_dataset
+      - generate_linear_dataset
+      - generate_pharma_adstock_dataset
+      - generate_geo_panel_dataset
+  - title: Marginal ROI
+    desc: Response-curve sweeps, mROI ranking, and budget reallocation.
+    contents:
+      - simulate_response
+      - mroi_ranking
+      - mroi_benchmark
+      - optimize_budget
+  - title: Diagnostics
+    desc: Coverage, variation decomposition, ESS, SHAP-sign audit.
+    contents:
+      - coverage_check
+      - variation_decomposition
+      - tree_ess_per_param
+      - shap_sign_audit

@@ -9,3 +9,5 @@
 ^SPEC\.md$
 ^\.gitignore$
 ^cran-comments\.md$
+^doc$
+^Meta$
