@@ -126,6 +126,64 @@
         </dt>
         <dd>Generate the geo-panel specialty DGP</dd>
       </dl></div><div class="section level2">
+      <h2 id="baselines">Baselines<a class="anchor" aria-label="anchor" href="#baselines"></a></h2>
+
+      <div class="section-desc"><p>Regression and Bayesian baseline fitters for benchmark comparison.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="fit_glmm_naive.html">fit_glmm_naive()</a></code>
+
+        </dt>
+        <dd>Fit the GLMM-Naive baseline (main effects + random customer intercept)</dd>
+
+        <dt>
+
+          <code><a href="fit_glmm_oracle.html">fit_glmm_oracle()</a></code>
+
+        </dt>
+        <dd>Fit the GLMM-Oracle baseline (main effects + planted interactions)</dd>
+
+        <dt>
+
+          <code><a href="fit_glmm_distributional.html">fit_glmm_distributional()</a></code>
+
+        </dt>
+        <dd>Fit the distributional-GLM baseline (correct family, no random effects)</dd>
+
+        <dt>
+
+          <code><a href="fit_glmm_distributional_oracle.html">fit_glmm_distributional_oracle()</a></code>
+
+        </dt>
+        <dd>Fit the GLMMDist-Oracle baseline (distributional GLM + planted interactions)</dd>
+
+        <dt>
+
+          <code><a href="fit_bayesian_hier_naive.html">fit_bayesian_hier_naive()</a></code>
+
+        </dt>
+        <dd>Fit the PyMC-Hier-Naive baseline via brms</dd>
+
+        <dt>
+
+          <code><a href="fit_bayesian_hier_oracle.html">fit_bayesian_hier_oracle()</a></code>
+
+        </dt>
+        <dd>Fit the PyMC-Hier-Oracle baseline via brms (+ planted interactions)</dd>
+
+        <dt>
+
+          <code><a href="fit_glmm_hybrid.html">fit_glmm_hybrid()</a></code>
+
+        </dt>
+        <dd>Fit the tree-to-GLMM hybrid baseline</dd>
+      </dl></div><div class="section level2">
       <h2 id="marginal-roi">Marginal ROI<a class="anchor" aria-label="anchor" href="#marginal-roi"></a></h2>
 
       <div class="section-desc"><p>Response-curve sweeps, mROI ranking, and budget reallocation.</p></div>

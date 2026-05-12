@@ -30,6 +30,28 @@ Reproducible panel data with known ground truth.
 - [`generate_geo_panel_dataset()`](https://jamesyoung93.github.io/treemmm-r/reference/generate_geo_panel_dataset.md)
   : Generate the geo-panel specialty DGP
 
+## Baselines
+
+Regression and Bayesian baseline fitters for benchmark comparison.
+
+- [`fit_glmm_naive()`](https://jamesyoung93.github.io/treemmm-r/reference/fit_glmm_naive.md)
+  : Fit the GLMM-Naive baseline (main effects + random customer
+  intercept)
+- [`fit_glmm_oracle()`](https://jamesyoung93.github.io/treemmm-r/reference/fit_glmm_oracle.md)
+  : Fit the GLMM-Oracle baseline (main effects + planted interactions)
+- [`fit_glmm_distributional()`](https://jamesyoung93.github.io/treemmm-r/reference/fit_glmm_distributional.md)
+  : Fit the distributional-GLM baseline (correct family, no random
+  effects)
+- [`fit_glmm_distributional_oracle()`](https://jamesyoung93.github.io/treemmm-r/reference/fit_glmm_distributional_oracle.md)
+  : Fit the GLMMDist-Oracle baseline (distributional GLM + planted
+  interactions)
+- [`fit_bayesian_hier_naive()`](https://jamesyoung93.github.io/treemmm-r/reference/fit_bayesian_hier_naive.md)
+  : Fit the PyMC-Hier-Naive baseline via brms
+- [`fit_bayesian_hier_oracle()`](https://jamesyoung93.github.io/treemmm-r/reference/fit_bayesian_hier_oracle.md)
+  : Fit the PyMC-Hier-Oracle baseline via brms (+ planted interactions)
+- [`fit_glmm_hybrid()`](https://jamesyoung93.github.io/treemmm-r/reference/fit_glmm_hybrid.md)
+  : Fit the tree-to-GLMM hybrid baseline
+
 ## Marginal ROI
 
 Response-curve sweeps, mROI ranking, and budget reallocation.

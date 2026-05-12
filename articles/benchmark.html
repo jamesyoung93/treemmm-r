@@ -108,14 +108,14 @@ a local R session.</p>
 <h3 id="glmm-naive-main-effects-only-random-customer-intercept">GLMM-Naive (main effects only, random customer intercept)<a class="anchor" aria-label="anchor" href="#glmm-naive-main-effects-only-random-customer-intercept"></a>
 </h3>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">glmm_naive</span> <span class="op">&lt;-</span> <span class="fu">fit_glmm_naive</span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span>, <span class="va">cfg</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">glmm_naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_glmm_naive.html">fit_glmm_naive</a></span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span>, <span class="va">cfg</span><span class="op">)</span></span>
 <span><span class="va">naive_shares</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">glmm_naive</span><span class="op">$</span><span class="va">attribution_shares</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="glmm-oracle-planted-interactions-given">GLMM-Oracle (planted interactions given)<a class="anchor" aria-label="anchor" href="#glmm-oracle-planted-interactions-given"></a>
 </h3>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">glmm_oracle</span> <span class="op">&lt;-</span> <span class="fu">fit_glmm_oracle</span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span>, <span class="va">cfg</span>, <span class="va">ds</span><span class="op">$</span><span class="va">ground_truth</span><span class="op">$</span><span class="va">interactions</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">glmm_oracle</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_glmm_oracle.html">fit_glmm_oracle</a></span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span>, <span class="va">cfg</span>, <span class="va">ds</span><span class="op">$</span><span class="va">ground_truth</span><span class="op">$</span><span class="va">interactions</span><span class="op">)</span></span>
 <span><span class="va">oracle_shares</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">glmm_oracle</span><span class="op">$</span><span class="va">attribution_shares</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -125,7 +125,7 @@ a local R session.</p>
 distributional GLM with the matched Poisson likelihood replaces the
 log1p transform used by GLMM-Naive.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">glmm_dist</span> <span class="op">&lt;-</span> <span class="fu">fit_glmm_distributional</span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span>, <span class="va">cfg</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">glmm_dist</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/fit_glmm_distributional.html">fit_glmm_distributional</a></span><span class="op">(</span><span class="va">ds</span><span class="op">$</span><span class="va">df</span>, <span class="va">cfg</span><span class="op">)</span></span>
 <span><span class="va">dist_shares</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">glmm_dist</span><span class="op">$</span><span class="va">attribution_shares</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
