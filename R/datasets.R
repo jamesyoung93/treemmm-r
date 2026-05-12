@@ -389,7 +389,8 @@ generate_geo_panel_dataset <- function(n_regions = 200L,
     df[[paste0(ch, "_raw")]] <- df[[ch]]
   }
 
-  # Apply per-customer geometric adstock
+  # Apply per-customer geometric adstock (base-R split/apply/combine so we
+  # don't trip data.table's CEDTA check inside package code).
   cust_col <- ds$columns$customer_id
   time_col <- ds$columns$time_col
   data.table::setorderv(df, c(cust_col, time_col))
@@ -397,16 +398,18 @@ generate_geo_panel_dataset <- function(n_regions = 200L,
   for (ch in names(decay_map)) {
     decay <- decay_map[[ch]]
     if (decay <= 0) next
-    # Within each customer, x_adstocked[t] = x[t] + decay * x_adstocked[t-1]
-    df[, (ch) := {
-      vals <- numeric(.N)
+    x <- as.numeric(df[[ch]])
+    cust <- df[[cust_col]]
+    out <- numeric(length(x))
+    idx_by_cust <- split(seq_along(x), cust)
+    for (idxs in idx_by_cust) {
       prev <- 0
-      for (k in seq_len(.N)) {
-        vals[k] <- get(ch)[k] + decay * prev
-        prev <- vals[k]
+      for (k in idxs) {
+        out[k] <- x[k] + decay * prev
+        prev <- out[k]
       }
-      vals
-    }, by = c(cust_col)]
+    }
+    df[[ch]] <- out
   }
 
   # Rebalance ground-truth attribution shares by amplification factor

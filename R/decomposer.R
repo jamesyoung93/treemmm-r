@@ -48,11 +48,11 @@ decompose <- function(shap_result, predictions, link = c("identity", "log")) {
 }
 
 # global_attribution turns the per-observation attribution matrix into
-# per-feature shares (each share is the L1 sum of that feature's
-# attribution divided by the total across features).
+# per-feature shares. Shares use absolute magnitudes so they are always
+# non-negative even when individual SHAP values cancel across rows.
 global_attribution <- function(attribution) {
   per_obs <- attribution$per_obs
-  feature_totals <- colSums(per_obs)
+  feature_totals <- colSums(abs(per_obs))
   total <- sum(feature_totals)
   if (total == 0) {
     shares <- rep(0, length(feature_totals))
