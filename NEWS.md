@@ -1,3 +1,18 @@
+# treemmm 0.3.0 (2026-06-13)
+
+## New features
+
+* **`reallocate()`** plans a cap-bounded committed budget increase.
+  Given a fitted pipeline and a percent budget change, it grows each
+  target channel's total touches by that percent and water-fills the
+  increment across panel cells with headroom below a per-customer cap
+  (the `cap_percentile` of observed positive touches, default 95). Cells
+  at or above the cap receive a zero increment and are never reduced, so
+  every per-customer counterfactual stays inside the observed support.
+  Returns the per-row landing plan, the aggregate roll-up, the predicted
+  incremental outcome and lift, and cap-binding diagnostics. Mirrors
+  `treemmm.mroi.reallocate` in the Python package.
+
 # treemmm 0.2.1 (2026-05-12)
 
 First feature-complete release of the R port. Mirrors the Python

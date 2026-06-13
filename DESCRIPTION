@@ -1,8 +1,8 @@
 Package: treemmm
 Type: Package
 Title: Tree-Based Marketing Mix Modeling with SHAP Attribution
-Version: 0.2.1
-Date: 2026-05-12
+Version: 0.3.0
+Date: 2026-06-13
 Authors@R:
     person("James", "Young",
            email = "46870524+jamesyoung93@users.noreply.github.com",

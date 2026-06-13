@@ -208,3 +208,194 @@ mroi_benchmark <- function(result, dataset) {
        model_ranking      = model_order,
        true_ranking       = true_order)
 }
+
+
+#' Plan a cap-bounded budget increase and predict its incremental outcome
+#'
+#' Increases each target channel's total touches by `budget_delta_pct` and
+#' deploys the increment additively to the cells that have headroom below a
+#' per-customer cap (the `cap_percentile` of observed positive touches). Cells
+#' at or above the cap receive a zero increment and are never reduced, so every
+#' per-customer counterfactual stays inside the observed support.
+#'
+#' This answers a different question than [simulate_response()]. The sweep
+#' traces aggregate response as a channel total is scaled and redistributed
+#' proportional to current usage; `reallocate()` commits to a fixed increment
+#' and water-fills it onto the cells with room under the cap. Mirrors
+#' `treemmm.mroi.reallocate` in the Python package.
+#'
+#' @param result A [treemmm_run()] result.
+#' @param budget_delta_pct Percent change in channel budget (25 means +25%).
+#' @param cap_percentile Percentile of observed positive touches used as the
+#'   per-customer cap (default 95).
+#' @param channel Reallocate a single named channel. Takes precedence over
+#'   `channels`.
+#' @param channels Reallocate across this set of channels, each independently
+#'   capped and grown by `budget_delta_pct`. When both `channel` and `channels`
+#'   are `NULL`, defaults to all `feature_cols` (caller should restrict to
+#'   promo_vars).
+#' @return A list with `$budget_delta_pct`, `$channels`, the per-row landing
+#'   plan `$per_row` (a data.table carrying, for each channel `c`, the proposed
+#'   `c`, `c__current`, and `c__increment`), the `$current_aggregate` and
+#'   `$proposed_aggregate` per-channel totals, the summed model predictions
+#'   `$predicted_outcome_current` / `$predicted_outcome_proposed`,
+#'   `$predicted_incremental_outcome`, `$predicted_lift_pct`, and a
+#'   `$diagnostics` sub-list (cap values, at-cap fraction, top-decile at-cap
+#'   fraction, mid-tier increment share, unchanged fraction, unallocatable
+#'   fraction).
+#' @export
+reallocate <- function(result,
+                       budget_delta_pct,
+                       cap_percentile = 95,
+                       channel = NULL,
+                       channels = NULL) {
+  if (!inherits(result, "pipeline_result")) {
+    stop("`result` must be a treemmm_run() output.")
+  }
+  feat_cols <- result$prepared_data$feature_cols
+  if (!is.null(channel)) {
+    target <- channel
+  } else if (!is.null(channels)) {
+    target <- channels
+  } else {
+    target <- feat_cols
+  }
+  missing <- setdiff(target, feat_cols)
+  if (length(missing) > 0L) {
+    stop("Channels not found in pipeline feature_cols: ",
+         paste(missing, collapse = ", "))
+  }
+
+  X_ref <- as.matrix(result$prepared_data$df[, feat_cols, with = FALSE])
+  storage.mode(X_ref) <- "double"
+  X_prop <- X_ref
+
+  caps               <- numeric(length(target))
+  current_aggregate  <- numeric(length(target))
+  proposed_aggregate <- numeric(length(target))
+  names(caps)               <- target
+  names(current_aggregate)  <- target
+  names(proposed_aggregate) <- target
+  per_row_cols       <- list()
+
+  total_cells              <- 0L
+  at_cap_cells             <- 0L
+  top_decile_cells         <- 0L
+  top_decile_at_cap_cells  <- 0L
+  unchanged_cells          <- 0L
+  increment_total          <- 0
+  increment_mid            <- 0
+  budget_total             <- 0
+  unallocatable_total      <- 0
+
+  for (col in target) {
+    current  <- X_ref[, col]
+    positive <- current[current > 0]
+    cap <- if (length(positive) > 0L) {
+      as.numeric(stats::quantile(positive, cap_percentile / 100,
+                                 type = 7, names = FALSE))
+    } else if (length(current) > 0L) {
+      max(current)
+    } else {
+      0
+    }
+
+    current_agg <- sum(current)
+    budget_add  <- current_agg * budget_delta_pct / 100
+    wf          <- .waterfill(current, cap, budget_add)
+    proposed    <- wf$proposed
+    increment   <- wf$increment
+
+    X_prop[, col]            <- proposed
+    caps[col]                <- cap
+    current_aggregate[col]   <- current_agg
+    proposed_aggregate[col]  <- sum(proposed)
+    per_row_cols[[col]]                    <- proposed
+    per_row_cols[[paste0(col, "__current")]]   <- current
+    per_row_cols[[paste0(col, "__increment")]] <- increment
+
+    at_cap        <- current >= cap
+    top_threshold <- if (length(current) > 0L) {
+      as.numeric(stats::quantile(current, 0.90, type = 7, names = FALSE))
+    } else 0
+    top_decile <- current >= top_threshold
+    mid_tier   <- (!top_decile) & (!at_cap)
+
+    total_cells             <- total_cells + length(current)
+    at_cap_cells            <- at_cap_cells + sum(at_cap)
+    top_decile_cells        <- top_decile_cells + sum(top_decile)
+    top_decile_at_cap_cells <- top_decile_at_cap_cells + sum(top_decile & at_cap)
+    unchanged_cells         <- unchanged_cells + sum(increment <= 1e-9)
+    increment_total         <- increment_total + sum(increment)
+    increment_mid           <- increment_mid + sum(increment[mid_tier])
+    budget_total            <- budget_total + budget_add
+    unallocatable_total     <- unallocatable_total + wf$unallocatable
+  }
+
+  per_row <- data.table::as.data.table(per_row_cols)
+
+  out_current  <- sum(stats::predict(result$model, X_ref))
+  out_proposed <- sum(stats::predict(result$model, X_prop))
+  incremental  <- out_proposed - out_current
+  lift_pct     <- if (out_current != 0) incremental / out_current * 100 else 0
+
+  diagnostics <- list(
+    cap_percentile = cap_percentile,
+    caps           = caps,
+    at_cap_fraction =
+      if (total_cells > 0L) at_cap_cells / total_cells else 0,
+    top_decile_at_cap_fraction =
+      if (top_decile_cells > 0L) top_decile_at_cap_cells / top_decile_cells else 0,
+    mid_tier_increment_fraction =
+      if (increment_total > 0) increment_mid / increment_total else 0,
+    unchanged_fraction =
+      if (total_cells > 0L) unchanged_cells / total_cells else 0,
+    unallocatable_fraction =
+      if (budget_total > 0) unallocatable_total / budget_total else 0
+  )
+
+  list(
+    budget_delta_pct              = budget_delta_pct,
+    channels                      = target,
+    per_row                       = per_row,
+    current_aggregate             = current_aggregate,
+    proposed_aggregate            = proposed_aggregate,
+    predicted_outcome_current     = out_current,
+    predicted_outcome_proposed    = out_proposed,
+    predicted_incremental_outcome = incremental,
+    predicted_lift_pct            = lift_pct,
+    diagnostics                   = diagnostics
+  )
+}
+
+
+# Internal: distribute `budget_add` touches across cells with headroom below
+# `cap`, proportional to per-cell headroom (`cap - current`). Cells at or above
+# the cap absorb nothing. When `budget_add` does not exceed total headroom the
+# split respects the cap exactly in a single pass; when it does exceed it, every
+# cell is filled to the cap and the overflow is returned as `unallocatable`.
+# Returns a list with `$proposed`, `$increment`, `$unallocatable`.
+.waterfill <- function(current, cap, budget_add) {
+  current        <- as.numeric(current)
+  headroom       <- pmax(cap - current, 0)
+  total_headroom <- sum(headroom)
+  increment      <- numeric(length(current))
+
+  if (total_headroom <= 0 || budget_add <= 0) {
+    return(list(proposed      = current,
+                increment     = increment,
+                unallocatable = max(budget_add, 0)))
+  }
+
+  if (budget_add <= total_headroom) {
+    increment     <- budget_add * headroom / total_headroom
+    unallocatable <- 0
+  } else {
+    increment     <- headroom
+    unallocatable <- budget_add - total_headroom
+  }
+
+  list(proposed      = current + increment,
+       increment     = increment,
+       unallocatable = unallocatable)
+}
