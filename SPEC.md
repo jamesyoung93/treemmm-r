@@ -67,6 +67,16 @@ The 0.005 threshold drops near-zero channels from the MAPE computation; both imp
 
 Both implementations use `random_state = 42` as the default. Because Python `numpy` and R `set.seed` use different PRNGs, exact panel equivalence is not achievable — but the planted attribution shares (which depend only on the structural coefficients, not the random draws) must match exactly. The DGP-generated panels are expected to produce attribution-share MAPE within ± 0.5 pp between the two implementations at the headline scale.
 
+## Budget reallocation parity (v0.3.x)
+
+The `reallocate` / `reallocate_curve` budget-simulation layer is deterministic: it water-fills a committed budget increase across customer-period cells with headroom below a per-customer cap, then predicts the incremental outcome. There is no random draw, so unlike the DGP panels the two implementations must agree on identical inputs, not merely within Monte Carlo error.
+
+- Per-customer cap: the `cap_percentile` of observed positive touches, computed with linear interpolation. Python `np.percentile` (default) and R `quantile(..., type = 7)` use the same interpolation, so the cap matches exactly.
+- Water-fill: the increment is split across below-cap cells in proportion to their headroom (cap minus current); cells at or above the cap absorb nothing and are never reduced. Overflow above total headroom is reported as the unallocatable fraction.
+- Units: outputs are in model-outcome and touch units; no cost or revenue per touch is assumed.
+
+Both implementations must reproduce the shared fixtures in `tests/testthat/fixtures/parity_*.csv` (generated from the Python package via `data-raw/generate_parity_fixtures.py`) to float tolerance.
+
 ## Version tracking
 
-This SPEC is versioned alongside the package. Changes to DGP math require synchronized PRs against both Python and R repos with a bumped SPEC version. SPEC version: **0.2.1**.
+This SPEC is versioned alongside the package. Changes to DGP math require synchronized PRs against both Python and R repos with a bumped SPEC version. SPEC version: **0.3.1**.

@@ -1,3 +1,43 @@
+# treemmm 0.3.1 (2026-06-15)
+
+Adds `reallocate_curve()` and realigns `reallocate()` to the Python API.
+Given a fitted model and a committed budget change, `reallocate()` plans
+where the extra touches land at the customer-period grain under a
+per-customer cap and predicts the incremental outcome; `reallocate_curve()`
+sweeps that plan across budget levels into a planner decision table while
+keeping the per-customer landing plan at every level. Figures are in
+model-outcome and touch units; a cost or revenue per touch is layered in
+downstream.
+
+## Changed
+
+* **`reallocate()`** now takes `(model, X, budget_delta_pct, ...)`,
+  mirroring the Python `treemmm.mroi.reallocate` signature, and works with
+  any model exposing a prediction method (a bare function, a `$predict`
+  closure, or a `pipeline_result`). This replaces the 0.3.0 signature,
+  which accepted a single `pipeline_result`. Channel inference now reads
+  the model's monotone constraints, matching Python's `_infer_channels`.
+
+## Added
+
+* **`reallocate_curve()`** runs `reallocate()` at each level in
+  `budget_deltas` and returns a `reallocation_curve`: a per-level decision
+  table (added touches, predicted incremental outcome and lift, the
+  marginal return per landed touch, and the next-step return against the
+  level below), the full plan retained per level so a per-customer call
+  list needs no re-run, and `max_allocatable_delta`, the largest swept
+  level whose full increment still lands inside the observed support.
+
+## Cross-implementation parity
+
+The reallocation algorithm is deterministic (water-fill arithmetic plus
+model predictions, no RNG), and numpy's default `np.percentile` equals R's
+`quantile(type = 7)`, so on identical inputs the R and Python
+implementations agree to float tolerance. `test-reallocate-parity.R` reads
+fixtures produced by the Python package
+(`data-raw/generate_parity_fixtures.py`) and asserts the R outputs
+reproduce them to 1e-8.
+
 # treemmm 0.3.0 (2026-06-13)
 
 ## New features
