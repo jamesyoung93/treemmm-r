@@ -22,15 +22,17 @@ install.packages("devtools", repos = "https://cloud.r-project.org")
 devtools::install(".", dependencies = TRUE)
 ```
 
-## Run the supporting demo
+## Run the quickstart learning demo
 
-The package installs a pharma quickstart script that runs an end-to-end synthetic panel demo and prints the checks that matter for the manuscript story:
+The package installs a pharma quickstart script that runs an end-to-end synthetic panel demo and prints the checks that matter for understanding the workflow:
 
 - recovery of the dominant planted promotional channels
 - automatic discovery of planted channel interactions
 - mROI ranking across channels
 - a cap-bounded incremental budget reallocation plan
 - support diagnostics for the rows being simulated
+
+This quickstart is deliberately a **get-to-know-how-this-works** run. It uses a small 500-customer x 24-period panel so it completes quickly and exposes the mechanics. It is **not** the headline benchmark and should not be used as the package's attribution-accuracy claim. Small synthetic panels are noisier; TreeMMM's attribution-recovery power is evaluated on real-world-sized cohorts such as the 3,000-HCP x 36-period verification runs below.
 
 Run it from any R session after installation:
 
@@ -69,7 +71,7 @@ Expected highlights from the default seed are:
 - a +25 percent `rep_visits` reallocation produces a positive predicted lift with no blocked allocation in the default sweep
 - the support diagnostic reports zero extrapolation for the training-row check
 
-This quickstart is a capability and evidence tour. Use the full verification script below for headline attribution-accuracy claims.
+The quickstart prints a small-demo attribution MAPE to show how scoring works, but that number is not the performance headline. Use the 3,000-HCP verification runs below for claim-supporting attribution accuracy.
 
 ## Full verification
 
@@ -84,7 +86,13 @@ Attribution-share MAPE at full scale uses 3,000 customers x 36 periods, Python's
 
 Pharma reproduces within standard error. CPG and SaaS land 2 to 3 percentage points wide of Python. The Linear gap is the largest: trees redistribute about 5 percent of mass from the dominant channel to weaker ones on each seed, which the fixed-grid LightGBM search in v0.3.1 does not tune away. Closing it needs Optuna-equivalent hyperparameter search; `mlr3tuning` integration is deferred to a future release.
 
-Run the full verification from a cloned repository:
+For the manuscript-style pharma result specifically, run the 3,000-HCP pharma benchmark:
+
+```sh
+Rscript inst/verify/benchmark_all_dgps.R --dgp=pharma
+```
+
+Run the full four-DGP verification from a cloned repository:
 
 ```sh
 Rscript inst/verify/benchmark_all_dgps.R
@@ -105,7 +113,7 @@ $env:TREEMMM_BENCHMARK_RESULTS = "output/benchmark_results.rds"
 Rscript inst/verify/benchmark_all_dgps.R
 ```
 
-The full verification is compute-heavy. On the Windows/R 4.3.3 audit machine it took about 20 minutes; faster laptops may finish sooner.
+The 3,000-HCP pharma-only verification is the recommended supporting run when you want to see the model at a realistic HCP-panel scale without running every DGP. The full four-DGP verification is compute-heavy; on the Windows/R 4.3.3 audit machine it took about 20 minutes, while the pharma-only subset took about four minutes.
 
 ## Capability tour
 

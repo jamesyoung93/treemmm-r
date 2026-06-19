@@ -21,6 +21,7 @@ script_dir <- if (length(script_path) > 0L && !is.na(script_path)) {
 
 args <- commandArgs(trailingOnly = TRUE)
 output_arg <- sub("^--output=", "", grep("^--output=", args, value = TRUE)[1])
+dgp_arg <- sub("^--dgp=", "", grep("^--dgp=", args, value = TRUE)[1])
 output_path <- Sys.getenv(
   "TREEMMM_BENCHMARK_RESULTS",
   output_arg %||% file.path(script_dir, "benchmark_results.rds")
@@ -77,6 +78,17 @@ dgps <- list(
                 scale = list(n_customers = 3000, n_periods = 36),
                 target = " 0.4% +/- 0.1%")
 )
+
+if (length(dgp_arg) > 0L && !is.na(dgp_arg) && nzchar(dgp_arg)) {
+  requested <- strsplit(dgp_arg, ",", fixed = TRUE)[[1]]
+  requested <- trimws(tolower(requested))
+  unknown <- setdiff(requested, names(dgps))
+  if (length(unknown) > 0L) {
+    stop("Unknown DGP(s): ", paste(unknown, collapse = ", "),
+         ". Valid values: ", paste(names(dgps), collapse = ", "))
+  }
+  dgps <- dgps[requested]
+}
 
 seeds <- c(42L, 43L, 44L)
 results <- list()

@@ -32,6 +32,8 @@ seed <- as.integer(Sys.getenv("TREEMMM_DEMO_SEED", "42"))
 section("Generate data")
 cat(sprintf("Synthetic pharma panel: %d customers x %d periods, seed %d\n",
             n_customers, n_periods, seed))
+cat("Scope: quickstart learning tour, not the headline benchmark.\n")
+cat("For attribution-accuracy claims, use the 3,000-customer x 36-period verification run.\n")
 ds <- generate_pharma_dataset(
   n_customers = n_customers,
   n_periods = n_periods,
@@ -72,7 +74,7 @@ print(share_table, row.names = FALSE, digits = 3)
 
 top_truth <- names(sort(truth[promo], decreasing = TRUE))[seq_len(3L)]
 top_model <- share_table$channel[seq_len(3L)]
-cat(sprintf("Promo-only attribution MAPE: %.1f%%\n",
+cat(sprintf("Small-demo promo-only attribution MAPE (not headline benchmark): %.1f%%\n",
             promo_mape(recovered, truth, promo)))
 cat("Truth top 3: ", paste(top_truth, collapse = ", "), "\n", sep = "")
 cat("Model top 3: ", paste(top_model, collapse = ", "), "\n", sep = "")
@@ -129,7 +131,9 @@ cat(sprintf("Largest fully allocatable delta in this sweep: %.0f%%\n",
             curve$max_allocatable_delta))
 
 section("Interpretation")
-cat("* This quick demo is a capability/evidence tour, not the full benchmark.\n")
+cat("* This quick demo is a get-to-know-the-workflow tour, not the full benchmark.\n")
+cat("* Small 500-customer panels are intentionally fast but noisier than real-world-sized cohorts.\n")
 cat("* The key checks are top-channel recovery, interaction recovery, positive mROI,\n")
 cat("  and a feasible budget reallocation plan inside observed support.\n")
-cat("* For headline attribution accuracy, run inst/verify/benchmark_all_dgps.R.\n")
+cat("* For headline attribution accuracy, run the 3,000-customer verification:\n")
+cat("  Rscript inst/verify/benchmark_all_dgps.R --dgp=pharma\n")
