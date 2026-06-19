@@ -62,6 +62,15 @@ test_that("coverage_check reports an extrapolation_fraction in [0, 1]", {
   expect_equal(length(cc$counts), 5L)
 })
 
+test_that("coverage_check treats exact training rows as covered", {
+  Xt <- matrix(stats::rnorm(200), ncol = 4L)
+  cc <- coverage_check(Xt, Xt)
+  expect_equal(cc$extrapolation_fraction, 0)
+  expect_equal(cc$exact_match_fraction, 1)
+  expect_true(cc$low_support_fraction >= 0)
+  expect_true(cc$low_support_fraction <= 1)
+})
+
 test_that("shap_sign_audit reports one row per channel", {
   # Synthetic SHAP-like matrix.
   shap_result <- list(
