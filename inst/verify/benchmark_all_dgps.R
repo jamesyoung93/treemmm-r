@@ -10,6 +10,22 @@
 
 suppressPackageStartupMessages({ library(treemmm) })
 
+`%||%` <- function(x, y) if (length(x) == 0L || is.na(x) || !nzchar(x)) y else x
+
+script_path <- sub("^--file=", "", grep("^--file=", commandArgs(FALSE), value = TRUE)[1])
+script_dir <- if (length(script_path) > 0L && !is.na(script_path)) {
+  dirname(normalizePath(script_path, winslash = "/", mustWork = FALSE))
+} else {
+  getwd()
+}
+
+args <- commandArgs(trailingOnly = TRUE)
+output_arg <- sub("^--output=", "", grep("^--output=", args, value = TRUE)[1])
+output_path <- Sys.getenv(
+  "TREEMMM_BENCHMARK_RESULTS",
+  output_arg %||% file.path(script_dir, "benchmark_results.rds")
+)
+
 cat("=== treemmm-r multi-seed verification ===\n")
 cat("treemmm:", as.character(packageVersion("treemmm")), "\n")
 cat("lightgbm:", as.character(packageVersion("lightgbm")), "\n\n")
@@ -97,5 +113,6 @@ for (nm in names(results)) {
               nm, r$target, r$mean, r$se))
 }
 
-saveRDS(results, "C:/Users/Admin/research-stage/treemmm-r/inst/verify/benchmark_results.rds")
-cat("\nResults saved.\n")
+dir.create(dirname(output_path), recursive = TRUE, showWarnings = FALSE)
+saveRDS(results, output_path)
+cat("\nResults saved to:", normalizePath(output_path, winslash = "/", mustWork = FALSE), "\n")

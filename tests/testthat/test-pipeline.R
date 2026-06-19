@@ -78,8 +78,8 @@ test_that("diagnose_distribution covers the major cases", {
 test_that("get_splits returns the requested number of rolling-origin folds", {
   df <- data.frame(t = rep(1:24, 5),
                    y = stats::rnorm(120))
-  splits <- get_splits(df, time_col = "t", n_folds = 4L,
-                       min_train_frac = 0.5)
+  splits <- treemmm:::get_splits(df, time_col = "t", n_folds = 4L,
+                                 min_train_frac = 0.5)
   expect_equal(length(splits), 4L)
   for (s in splits) {
     expect_true(length(s$train_idx) > 0L)

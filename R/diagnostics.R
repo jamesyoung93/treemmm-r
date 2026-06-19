@@ -6,19 +6,24 @@
 #'
 #' For each row of `X_simulated`, counts how many rows of `X_train` lie within
 #' Euclidean distance `radius` (after standardizing each column to unit variance).
-#' Returns a vector of neighbor counts. Below `min_neighbors` typically signals
-#' extrapolation regardless of method.
+#' Returns a vector of neighbor counts. Rows exactly matching an observed
+#' training row are treated as covered even when the local density is sparse;
+#' sparse-but-observed rows are still reported via `$low_support_fraction`.
+#' Below `min_neighbors` without an exact match typically signals extrapolation
+#' regardless of method.
 #'
 #' @param X_train Numeric matrix or data.frame.
 #' @param X_simulated Numeric matrix or data.frame with the same columns.
 #' @param radius Distance threshold in standardized space.
 #' @param min_neighbors Threshold below which extrapolation is flagged.
-#' @return A list with `$counts` (per-simulated-row neighbor count) and
-#'   `$extrapolation_fraction` (fraction below `min_neighbors`).
+#' @return A list with `$counts` (per-simulated-row neighbor count),
+#'   `$nearest_distance`, `$exact_match`, `$low_support_fraction`, and
+#'   `$extrapolation_fraction` (fraction below `min_neighbors` and not exactly
+#'   observed in training).
 #' @export
 coverage_check <- function(X_train,
                            X_simulated,
-                           radius = 0.5,
+                           radius = 2.0,
                            min_neighbors = 30L) {
   Xt <- as.matrix(X_train)
   Xs <- as.matrix(X_simulated)
@@ -33,13 +38,22 @@ coverage_check <- function(X_train,
   Zs <- sweep(sweep(Xs, 2L, mu, "-"), 2L, sd, "/")
 
   counts <- integer(nrow(Zs))
+  nearest_distance <- numeric(nrow(Zs))
   for (i in seq_len(nrow(Zs))) {
     diffs <- sweep(Zt, 2L, Zs[i, ], "-")
     dists <- sqrt(rowSums(diffs * diffs))
     counts[i] <- sum(dists <= radius)
+    nearest_distance[i] <- min(dists)
   }
+
+  exact_match <- nearest_distance <= sqrt(.Machine$double.eps)
+  low_support <- counts < min_neighbors
   list(counts = counts,
-       extrapolation_fraction = mean(counts < min_neighbors))
+       nearest_distance = nearest_distance,
+       exact_match = exact_match,
+       exact_match_fraction = mean(exact_match),
+       low_support_fraction = mean(low_support),
+       extrapolation_fraction = mean(low_support & !exact_match))
 }
 
 
