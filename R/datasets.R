@@ -4,8 +4,8 @@
 #   $columns: column role mapping
 #   $ground_truth: list with $attribution_shares plus DGP coefficients
 # Mirrors treemmm.demo.datasets.* in the Python package.
-# Both implementations must produce numerically-equivalent attribution
-# shares at seed = 42 (within Monte Carlo error). See SPEC.md.
+# The implementations share structural targets but use different PRNGs and
+# some DGP-specific approximations. See SPEC.md for the parity boundary.
 
 
 # Adstock decay defaults, mirroring Python.
@@ -96,7 +96,11 @@ CPG_ADSTOCK_DECAYS <- list(
 
 #' Generate the synthetic pharma DGP (NegBin)
 #'
-#' @inheritParams generate_pharma_dataset
+#' @param n_customers Number of panel customers.
+#' @param n_periods Number of periods per customer.
+#' @param random_state Integer random seed.
+#' @param with_adstock Whether to replace promotional columns with a post-hoc
+#'   geometric-adstock transformation and retain raw columns.
 #' @return A `generated_dataset` list.
 #' @export
 generate_pharma_dataset <- function(n_customers = 500L,

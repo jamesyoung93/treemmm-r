@@ -7,6 +7,8 @@ Authors@R:
     person("James", "Young",
            email = "46870524+jamesyoung93@users.noreply.github.com",
            role = c("aut", "cre"))
+Author: James Young [aut, cre]
+Maintainer: James Young <46870524+jamesyoung93@users.noreply.github.com>
 Description: Tree-based Marketing Mix Modeling (MMM) using gradient-boosted
     trees (LightGBM, XGBoost) paired with SHAP attribution for promotional
     channel decomposition on customer-level panel data. Automatically

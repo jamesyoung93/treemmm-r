@@ -16,8 +16,8 @@
 #' @param df A `data.frame` or `data.table` panel: one row per
 #'   (customer, period).
 #' @param config A [run_config()] object.
-#' @param output_dir Optional path. Reserved for writing CSV results
-#'   (Phase 5 will populate; currently unused).
+#' @param output_dir Optional path retained for API compatibility. It is stored
+#'   in the returned result; the current pipeline does not write files.
 #' @return A `pipeline_result` list with fields:
 #'   * `attribution_shares` — named list of per-feature shares summing to 1
 #'   * `fold_metrics` — list of per-fold R-squared / WMAPE / MAE / n_test

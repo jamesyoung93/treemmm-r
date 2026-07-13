@@ -34,7 +34,7 @@
   total_promo_control <- sum(contributions)
   if (total_promo_control == 0) {
     shares <- c("_base" = base_share,
-                setNames(rep(0, length(contributions)), feature_cols))
+                stats::setNames(rep(0, length(contributions)), feature_cols))
     return(as.list(shares))
   }
   # Allocate (1 - base_share) across features proportional to magnitudes
@@ -114,7 +114,7 @@ fit_glmm_naive <- function(df, config) {
 #'
 #' @param df A `data.frame` or `data.table` panel.
 #' @param config A [run_config()] object.
-#' @param planted_interactions List of [interaction_spec()] objects (typically
+#' @param planted_interactions List of interaction-specification objects (typically
 #'   `ground_truth$interactions`).
 #' @return Same structure as [fit_glmm_naive()].
 #' @export
@@ -204,6 +204,11 @@ fit_glmm_distributional <- function(df, config, family_override = NULL) {
 # ---------------------------------------------------------------------------
 
 #' Fit the GLMMDist-Oracle baseline (distributional GLM + planted interactions)
+#'
+#' @inheritParams fit_glmm_distributional
+#' @inheritParams fit_glmm_oracle
+#' @return Same structure as [fit_glmm_distributional()] plus
+#'   `$planted_interactions`.
 #' @export
 fit_glmm_distributional_oracle <- function(df, config, planted_interactions,
                                            family_override = NULL) {
@@ -296,6 +301,11 @@ fit_bayesian_hier_naive <- function(df, config,
 }
 
 #' Fit the PyMC-Hier-Oracle baseline via brms (+ planted interactions)
+#'
+#' @inheritParams fit_bayesian_hier_naive
+#' @inheritParams fit_glmm_oracle
+#' @return Same structure as [fit_bayesian_hier_naive()] plus
+#'   `$planted_interactions`.
 #' @export
 fit_bayesian_hier_oracle <- function(df, config, planted_interactions,
                                      n_chains = 2L, n_iter = 1000L) {
@@ -352,7 +362,7 @@ fit_bayesian_hier_oracle <- function(df, config, planted_interactions,
   total <- sum(contributions)
   if (total == 0) {
     return(as.list(c("_base" = 0,
-                     setNames(rep(0, length(contributions)), feature_cols))))
+                     stats::setNames(rep(0, length(contributions)), feature_cols))))
   }
   feature_shares <- contributions / total
   as.list(c("_base" = 0, feature_shares))
@@ -421,7 +431,7 @@ fit_glmm_hybrid <- function(df, config, n_interactions = 3L) {
   }
   pair_scores <- pair_scores[order(
     -vapply(pair_scores, `[[`, numeric(1L), "score"))]
-  top <- head(pair_scores, n_interactions)
+  top <- utils::head(pair_scores, n_interactions)
   discovered <- lapply(top, function(p) interaction_spec(p$var1, p$var2))
 
   # Stage 3: refit a GLMM with discovered interactions.

@@ -10,8 +10,10 @@
 #' * [generate_pharma_dataset()] and siblings to produce the synthetic DGPs.
 #'
 #' @section Status:
-#' Version 0.2.1.9000 is Phase 1 (scaffold). Functions are present as stubs
-#' that throw `Not yet implemented`. See `ROADMAP.md` for the seven-phase plan.
+#' Version 0.3.1 includes the end-to-end LightGBM/SHAP pipeline, synthetic
+#' panels, regression and optional Bayesian baselines, diagnostics, mROI,
+#' cap-bounded reallocation, and deterministic cross-language parity fixtures.
+#' See `ROADMAP.md` for the implementation history and remaining limitations.
 #'
 #' @keywords internal
 "_PACKAGE"
