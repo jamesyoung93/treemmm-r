@@ -77,10 +77,8 @@ prepare_data <- function(df, config) {
     reasoning <- dd$reasoning
   }
 
-  # Drop seasonality if it is a duplicate row-broadcast helper added by the
-  # synthetic generator: it leaks the time index and can crowd the tree.
-  # Users who want to model seasonality explicitly should add it as a
-  # control_var.
+  # Model features are exactly the roles declared in the column specification;
+  # no additional synthetic columns are added or removed implicitly.
   feature_cols <- c(cs$promo_vars, cs$control_vars, cs$categorical_vars)
   feature_cols <- intersect(feature_cols, names(df))
 

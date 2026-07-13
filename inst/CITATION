@@ -1,0 +1,11 @@
+citHeader("To cite TreeMMM in publications, please use:")
+
+bibentry(
+  bibtype = "Article",
+  title = "TreeMMM: Tree-Based Marketing Mix Modeling with SHAP Attribution and Automatic Interaction Discovery",
+  author = person("James", "Young"),
+  journal = "arXiv preprint",
+  year = "2026",
+  note = "arXiv:ARXIV_ID; submitted to the International Journal of Forecasting",
+  url = "https://github.com/jamesyoung93/treemmm"
+)

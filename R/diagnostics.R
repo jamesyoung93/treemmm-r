@@ -125,7 +125,7 @@ tree_ess_per_param <- function(n_train, n_estimators, max_depth) {
 #' values can still be negative under interaction effects — that is
 #' mathematically expected, not a violation).
 #'
-#' @param shap_result Output of [compute_shap()].
+#' @param shap_result Output of the internal SHAP computation step.
 #' @return A data.table with one row per channel.
 #' @export
 shap_sign_audit <- function(shap_result) {

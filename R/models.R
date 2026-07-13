@@ -6,7 +6,7 @@
 
 # LightGBM with monotone constraints + fixed-grid hyperparameter search.
 # The Python implementation uses Optuna (TPE); the R port uses a small
-# grid for v0.2.2. {mlr3tuning} integration is deferred.
+# deterministic grid. {mlr3tuning} integration is deferred.
 fit_lightgbm <- function(X_train, y_train,
                          X_val = NULL, y_val = NULL,
                          objective = "regression",
@@ -62,7 +62,7 @@ fit_lightgbm <- function(X_train, y_train,
 
   best <- list(score = Inf, model = NULL, params = NULL)
   for (i in seq_len(nrow(grid))) {
-    params <- modifyList(base_params, list(
+    params <- utils::modifyList(base_params, list(
       learning_rate    = grid$learning_rate[i],
       max_depth        = grid$max_depth[i],
       num_leaves       = grid$num_leaves[i],

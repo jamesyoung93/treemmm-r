@@ -231,7 +231,9 @@ generate_panel <- function(config) {
 
   promo_names <- vapply(promo, `[[`, "", "name")
   control_names <- vapply(config$control_vars, `[[`, "", "name")
-  weight_map <- setNames(vapply(promo, `[[`, 1.0, "mean_weight"), promo_names)
+  weight_map <- stats::setNames(
+    vapply(promo, `[[`, 1.0, "mean_weight"), promo_names
+  )
 
   # Accumulators for centered ground-truth attribution
   total_rows <- n_c * n_t
@@ -316,7 +318,7 @@ generate_panel <- function(config) {
       eta <- eta + seasonality[t]
       component_values[["_seasonality"]][row_idx] <- seasonality[t]
 
-      promo_contribs <- setNames(numeric(n_promo), promo_names)
+      promo_contribs <- stats::setNames(numeric(n_promo), promo_names)
       for (j in seq_along(promo)) {
         pv <- promo[[j]]
         if (pv$lag > 0L && t > pv$lag) {
@@ -389,12 +391,14 @@ generate_panel <- function(config) {
   customer_sensitivities <- vector("list", n_c)
   for (i in seq_len(n_c)) {
     cust_id <- sprintf("cust_%04d", i - 1L)
-    sens_vec <- setNames(sensitivities[i, ], promo_names)
+    sens_vec <- stats::setNames(sensitivities[i, ], promo_names)
     customer_sensitivities[[cust_id]] <- sens_vec
   }
 
-  base_rates_dict <- setNames(as.list(base_rates),
-                              sprintf("cust_%04d", seq_len(n_c) - 1L))
+  base_rates_dict <- stats::setNames(
+    as.list(base_rates),
+    sprintf("cust_%04d", seq_len(n_c) - 1L)
+  )
 
   ground_truth <- structure(
     list(

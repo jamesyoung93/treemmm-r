@@ -8,8 +8,9 @@
 # prediction by SHAP construction; we just return them.
 #
 # For log link (Poisson / Tweedie / Gamma): naive exponentiation breaks
-# additivity. We allocate the predicted outcome proportionally to |SHAP|:
-#   attribution_i = (|SHAP_i| / sum_j |SHAP_j|) * prediction
+# additivity. We allocate the predicted outcome proportionally to absolute
+# margin-space contribution, including the SHAP expected/base value:
+#   attribution_i = (|SHAP_i| / (|base| + sum_j |SHAP_j|)) * prediction
 #
 # Per-row attributions therefore always sum to the prediction. The
 # "_base" share is the proportion attributable to the expected-value column.
@@ -32,17 +33,27 @@ decompose <- function(shap_result, predictions, link = c("identity", "log")) {
     ))
   }
 
-  # Log link: proportional allocation across feature SHAP values only.
-  # The SHAP expected_value (in margin/log space) is O(log(mean_outcome))
-  # which is much larger than per-feature |SHAP| values on the same scale,
-  # so including it in the denominator would let it swallow most of the
-  # share. Python TreeMMM's decomposer also allocates only across features
-  # for log-link models. Each row's attributions sum exactly to the
-  # prediction.
+  # Log link: proportional allocation across the base value and feature SHAP
+  # values, matching Python TreeMMM. Each row's attributions sum exactly to
+  # the prediction. If every margin-space contribution is effectively zero,
+  # the full prediction is assigned to the base term.
   abs_sv <- abs(sv)
-  row_total <- rowSums(abs_sv)
-  row_total[row_total == 0] <- 1
-  per_obs <- abs_sv * (predictions / row_total)
+  abs_base <- abs(as.numeric(base)[1L])
+  row_total <- rowSums(abs_sv) + abs_base
+  nonzero <- row_total >= 1e-15
+
+  feature_obs <- matrix(0, nrow = n, ncol = p,
+                        dimnames = list(NULL, feat_names))
+  base_obs <- numeric(n)
+  if (any(nonzero)) {
+    scale <- predictions[nonzero] / row_total[nonzero]
+    feature_obs[nonzero, ] <- abs_sv[nonzero, , drop = FALSE] * scale
+    base_obs[nonzero] <- abs_base * scale
+  }
+  if (any(!nonzero)) {
+    base_obs[!nonzero] <- predictions[!nonzero]
+  }
+  per_obs <- cbind("_base" = base_obs, feature_obs)
   structure(
     list(per_obs = per_obs, predictions = predictions, link = "log"),
     class = "attribution"
@@ -61,7 +72,44 @@ global_attribution <- function(attribution) {
   } else {
     shares <- feature_totals / total
   }
-  setNames(as.list(shares), colnames(per_obs))
+  stats::setNames(as.list(shares), colnames(per_obs))
+}
+
+
+#' Renormalize attribution shares over promotional variables
+#'
+#' Filters a full attribution-share vector to the requested promotional
+#' variables, takes absolute magnitudes, and renormalizes them to sum to one.
+#' This is the comparison convention used by the TreeMMM paper benchmarks: it
+#' removes differences in base/intercept and control-variable definitions
+#' before calculating promotional attribution error.
+#'
+#' @param shares Named numeric vector or named list of attribution shares.
+#' @param promo_vars Character vector naming the promotional variables to keep.
+#' @return A named numeric vector in `promo_vars` order. It sums to one unless
+#'   every selected share is zero, in which case it contains zeros.
+#' @export
+promo_only_shares <- function(shares, promo_vars) {
+  values <- unlist(shares, use.names = TRUE)
+  if (is.null(names(values))) {
+    stop("`shares` must be named.")
+  }
+  if (!is.character(promo_vars) || length(promo_vars) == 0L ||
+      anyNA(promo_vars) || any(!nzchar(promo_vars))) {
+    stop("`promo_vars` must be a non-empty character vector of names.")
+  }
+
+  selected <- vapply(
+    promo_vars,
+    function(var) if (var %in% names(values)) values[[var]] else 0,
+    numeric(1L)
+  )
+  selected <- abs(selected)
+  total <- sum(selected)
+  if (total < 1e-15) {
+    return(selected)
+  }
+  selected / total
 }
 
 # Internal: verify row-sums match predictions within tolerance.

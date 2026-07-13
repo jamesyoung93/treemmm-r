@@ -1,6 +1,6 @@
 # TreeMMM Specification
 
-This document defines the data-generating processes (DGPs) and the benchmark metric used by both the Python TreeMMM and the R port. Both implementations must produce numerically equivalent panels at seed = 42 and the same per-channel attribution shares within float tolerance.
+This document defines the shared structural contract for the Python TreeMMM and R-port data-generating processes (DGPs), benchmark metric, and deterministic parity fixtures. Stochastic panels are expected to be structurally equivalent, not numerically identical: Python and R use different pseudo-random-number generators and some implementation-specific approximations. Exact floating-point parity is required only for deterministic algorithms evaluated on shared input fixtures.
 
 For the formal write-up, see the paper at https://github.com/jamesyoung93/treemmm/blob/main/paper/TreeMMM_White_Paper.md. This SPEC is the engineering-side summary that the two implementations must satisfy.
 
@@ -50,7 +50,7 @@ For each DGP, the **reference attribution share** per channel is computed as:
 share_k = (L1 norm of mean-centered DGP component contribution for channel k) / sum across channels
 ```
 
-This is a variance-attribution heuristic (component-magnitude decomposition), not the Shapley decomposition of the DGP function. Both implementations must compute identical reference shares from the same generated panel.
+This is a variance-attribution heuristic (component-magnitude decomposition), not the Shapley decomposition of the DGP function. Both implementations use this definition, but independently generated stochastic panels need not produce identical realized shares.
 
 ## Benchmark metric
 
@@ -65,7 +65,7 @@ The 0.005 threshold drops near-zero channels from the MAPE computation; both imp
 
 ## Random seed handling
 
-Both implementations use `random_state = 42` as the default. Because Python `numpy` and R `set.seed` use different PRNGs, exact panel equivalence is not achievable — but the planted attribution shares (which depend only on the structural coefficients, not the random draws) must match exactly. The DGP-generated panels are expected to produce attribution-share MAPE within ± 0.5 pp between the two implementations at the headline scale.
+Both implementations use `random_state = 42` as the default for within-language reproducibility. Python `numpy` and R `set.seed` use different PRNGs, so row-level panel values and realized benchmark results are not expected to match exactly. Cross-language DGP performance is reported empirically rather than constrained to a fixed tolerance. Exact parity claims are reserved for deterministic routines run on the shared CSV fixtures.
 
 ## Budget reallocation parity (v0.3.x)
 

@@ -33,9 +33,8 @@ cat("lightgbm:", as.character(packageVersion("lightgbm")), "\n\n")
 
 # Python's attribution-share MAPE: promo-only renormalization, min_share filter
 mape_python <- function(recovered_shares, truth_shares, promo, min_share = 0.005) {
-  recv <- recovered_shares[promo]; recv[is.na(recv)] <- 0
-  recv_n  <- abs(recv) / sum(abs(recv))
-  tru_n   <- abs(truth_shares[promo]) / sum(abs(truth_shares[promo]))
+  recv_n <- promo_only_shares(recovered_shares, promo)
+  tru_n <- promo_only_shares(truth_shares, promo)
   mask    <- tru_n > min_share
   100 * mean(abs(recv_n[mask] - tru_n[mask]) / tru_n[mask])
 }

@@ -4,7 +4,7 @@
 
 Status: v0.3.1. Docs: [jamesyoung93.github.io/treemmm-r](https://jamesyoung93.github.io/treemmm-r/).
 
-This is the R companion to the Python TreeMMM package, at feature parity for R users who want to verify, extend, or run TreeMMM in an R analytics stack. The v0.3.x budget-simulation layer (`reallocate`, `reallocate_curve`) mirrors the Python API and, because it is RNG-free, reproduces the Python budget figures to floating-point tolerance. The original paper and Python implementation are at <https://github.com/jamesyoung93/treemmm>.
+This is the R companion to the Python TreeMMM package. It implements the core panel-modeling workflow for R users, but it is not at full feature or data-generating-process parity with Python. The v0.3.x budget-simulation layer (`reallocate`, `reallocate_curve`) mirrors the Python API and, because it is RNG-free, reproduces the Python budget figures to floating-point tolerance. The original paper and Python implementation are at <https://github.com/jamesyoung93/treemmm>.
 
 ## Installation
 
@@ -212,7 +212,7 @@ Bayesian hierarchical baselines require `brms` plus a Stan backend and are not r
 | Figures | matplotlib | `ggplot2` |
 | `reallocate()` first argument | bare fitted fold model | whole `pipeline_result` |
 
-The DGP math is identical, and the reallocation arithmetic is identical to floating-point tolerance. See [`SPEC.md`](SPEC.md) for the formal specification both packages target.
+The packages target the same high-level workflow, but their stochastic DGP implementations and random-number generators are not numerically identical. The RNG-free reallocation arithmetic agrees to floating-point tolerance on shared fixtures. See [`SPEC.md`](SPEC.md) for the formal specification both packages target.
 
 ## License
 
