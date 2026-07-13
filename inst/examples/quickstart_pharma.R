@@ -12,13 +12,8 @@ section <- function(title) {
 }
 
 promo_mape <- function(recovered_shares, truth_shares, promo, min_share = 0.005) {
-  recovered <- recovered_shares[promo]
-  recovered[is.na(recovered)] <- 0
-  truth <- truth_shares[promo]
-  truth[is.na(truth)] <- 0
-
-  recovered <- abs(recovered) / sum(abs(recovered))
-  truth <- abs(truth) / sum(abs(truth))
+  recovered <- promo_only_shares(recovered_shares, promo)
+  truth <- promo_only_shares(truth_shares, promo)
   active <- truth > min_share
   100 * mean(abs(recovered[active] - truth[active]) / truth[active])
 }

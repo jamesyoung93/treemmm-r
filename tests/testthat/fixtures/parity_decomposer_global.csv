@@ -1,0 +1,9 @@
+scenario,variable,share
+nonzero_base,_base,0.52529539426091154
+nonzero_base,rep_visits,0.25772847841813357
+nonzero_base,samples,0.11748251748251751
+nonzero_base,control,0.099493609838437427
+zero_total,_base,1
+zero_total,rep_visits,0
+zero_total,samples,0
+zero_total,control,0

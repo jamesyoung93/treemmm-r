@@ -29,6 +29,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from treemmm.core.attribution.decomposer import decompose
+from treemmm.core.interpret.shap_engine import SHAPResult
 from treemmm.mroi import reallocate, reallocate_curve
 
 OUT = Path(__file__).resolve().parents[1] / "tests" / "testthat" / "fixtures"
@@ -85,8 +87,90 @@ def _plan_scalars(scenario: str, plan) -> list[dict]:
     return [{"scenario": scenario, "key": k, "value": v} for k, v in rows]
 
 
+def _write_decomposer_fixtures() -> None:
+    """Write deterministic log-link decomposer inputs and Python outputs."""
+    scenarios = [
+        {
+            "name": "nonzero_base",
+            "expected_value": 0.7,
+            "predictions": np.array([4.2, 1.3], dtype=float),
+            "shap_values": np.array(
+                [[0.3, -0.2, 0.1], [-0.5, 0.0, 0.25]], dtype=float
+            ),
+        },
+        {
+            "name": "zero_total",
+            "expected_value": 0.0,
+            "predictions": np.array([2.5], dtype=float),
+            "shap_values": np.zeros((1, 3), dtype=float),
+        },
+    ]
+    feature_names = ["rep_visits", "samples", "control"]
+    input_rows: list[dict] = []
+    output_rows: list[dict] = []
+    global_rows: list[dict] = []
+
+    for scenario in scenarios:
+        shap_values = scenario["shap_values"]
+        predictions = scenario["predictions"]
+        shap_result = SHAPResult(
+            values=shap_values,
+            expected_value=scenario["expected_value"],
+            feature_names=feature_names,
+            link="log",
+        )
+        attribution = decompose(shap_result, predictions)
+
+        for row_idx in range(len(predictions)):
+            row_id = f"row{row_idx + 1}"
+            input_rows.append(
+                {
+                    "scenario": scenario["name"],
+                    "row_id": row_id,
+                    "expected_value": scenario["expected_value"],
+                    "prediction": predictions[row_idx],
+                    **{
+                        f"shap__{name}": shap_values[row_idx, col_idx]
+                        for col_idx, name in enumerate(feature_names)
+                    },
+                }
+            )
+            output_rows.append(
+                {
+                    "scenario": scenario["name"],
+                    "row_id": row_id,
+                    "_base": attribution.base_values[row_idx],
+                    **{
+                        name: attribution.values[row_idx, col_idx]
+                        for col_idx, name in enumerate(feature_names)
+                    },
+                }
+            )
+
+        global_attribution = attribution.global_attribution()
+        for row in global_attribution.itertuples(index=False):
+            global_rows.append(
+                {
+                    "scenario": scenario["name"],
+                    "variable": row.variable,
+                    "share": row.pct_of_total / 100.0,
+                }
+            )
+
+    pd.DataFrame(input_rows).to_csv(
+        OUT / "parity_decomposer_input.csv", index=False, float_format=FLOAT_FMT
+    )
+    pd.DataFrame(output_rows).to_csv(
+        OUT / "parity_decomposer_output.csv", index=False, float_format=FLOAT_FMT
+    )
+    pd.DataFrame(global_rows).to_csv(
+        OUT / "parity_decomposer_global.csv", index=False, float_format=FLOAT_FMT
+    )
+
+
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
+    _write_decomposer_fixtures()
     df = _toy_frame()
 
     # Shared input panel (both implementations read this exact file).

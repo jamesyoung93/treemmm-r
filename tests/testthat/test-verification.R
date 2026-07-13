@@ -36,10 +36,8 @@ test_that("R-port pharma TreeMMM produces sensible attribution at moderate scale
   result <- treemmm_run(ds$df, cfg)
 
   promo <- ds$columns$promo_vars
-  recovered <- unlist(result$attribution_shares)[promo]
-  recovered[is.na(recovered)] <- 0
-  reference <- unlist(ds$ground_truth$attribution_shares)[promo]
-  reference[is.na(reference)] <- 0
+  recovered <- promo_only_shares(result$attribution_shares, promo)
+  reference <- promo_only_shares(ds$ground_truth$attribution_shares, promo)
 
   # MAPE over channels with non-trivial reference shares
   active <- reference > 0.005
