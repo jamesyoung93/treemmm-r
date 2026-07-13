@@ -323,7 +323,7 @@ generate_pharma_adstock_dataset <- function(n_customers = 500L,
 
 
 # ---------------------------------------------------------------------------
-# Geo-panel DGP — 200 regions x 52 weeks (Tweedie, planted adstock + saturation)
+# Geo-panel DGP — approximate R stress-test, not the paper comparison DGP
 # ---------------------------------------------------------------------------
 .geo_panel_dgp_config <- function(n_regions, n_weeks, random_state) {
   promo_vars <- list(
@@ -354,12 +354,16 @@ generate_pharma_adstock_dataset <- function(n_customers = 500L,
 
 #' Generate the geo-panel specialty DGP
 #'
-#' DGP designed to give aggregate-Bayesian methods their home turf:
-#' 200 regions x 52 weeks, three channels with planted geometric adstock
-#' and logistic saturation. Used in the geo-panel comparison vs
-#' PyMC-Marketing / Robyn / Meridian. The planted adstock decays are
-#' applied via [.apply_adstock()] using the [CPG_ADSTOCK_DECAYS] map
-#' (TV: 0.6, digital: 0.3, trade: 0.4).
+#' This is an approximate R-only geo-panel stress-test, not a faithful
+#' implementation of the paper's aggregate-comparator DGP. Both the current
+#' Python and R geo generators draw Tweedie outcomes, but this R generator
+#' draws the outcome from generic square-root, log, and linear responses before
+#' applying adstock only to the returned feature columns. Consequently, its
+#' outcome is not planted from the transformed features. It also omits the
+#' Python generator's explicit logistic saturation, market control, and region
+#' sensitivity. The R decays are TV 0.6, digital 0.3, and trade 0.4; the Python
+#' decays are 0.5, 0.3, and 0, respectively. Do not use this generator to claim
+#' paper-DGP or cross-method equivalence.
 #'
 #' @param n_regions Number of geographic regions. Default 200.
 #' @param n_weeks Number of weekly periods. Default 52.
@@ -389,28 +393,16 @@ generate_geo_panel_dataset <- function(n_regions = 200L,
     df[[paste0(ch, "_raw")]] <- df[[ch]]
   }
 
-  # Apply per-customer geometric adstock (base-R split/apply/combine so we
-  # don't trip data.table's CEDTA check inside package code).
+  # Apply per-customer geometric adstock without changing row order.
   cust_col <- ds$columns$customer_id
   time_col <- ds$columns$time_col
-  data.table::setorderv(df, c(cust_col, time_col))
-
-  for (ch in names(decay_map)) {
-    decay <- decay_map[[ch]]
-    if (decay <= 0) next
-    x <- as.numeric(df[[ch]])
-    cust <- df[[cust_col]]
-    out <- numeric(length(x))
-    idx_by_cust <- split(seq_along(x), cust)
-    for (idxs in idx_by_cust) {
-      prev <- 0
-      for (k in idxs) {
-        out[k] <- x[k] + decay * prev
-        prev <- out[k]
-      }
-    }
-    df[[ch]] <- out
-  }
+  df <- apply_panel_adstock(
+    df = df,
+    time_col = time_col,
+    customer_id_col = cust_col,
+    channels = names(decay_map),
+    decay = decay_map
+  )
 
   # Rebalance ground-truth attribution shares by amplification factor
   gt <- ds$ground_truth
