@@ -21,6 +21,7 @@ test_that("treemmm_run produces a valid pipeline_result on the linear DGP", {
 
   result <- treemmm_run(ds$df, cfg)
   expect_s3_class(result, "pipeline_result")
+  expect_identical(result$config, cfg)
 
   # Attribution shares sum to ~1 and are non-negative
   shares <- unlist(result$attribution_shares)
@@ -39,6 +40,30 @@ test_that("treemmm_run produces a valid pipeline_result on the linear DGP", {
     expect_true("r2" %in% names(fm))
     expect_true("wmape" %in% names(fm))
   }
+
+  # Decision helpers default to configured promo variables, never controls.
+  default_mroi <- mroi_ranking(result)
+  expect_setequal(names(default_mroi), ds$columns$promo_vars)
+  expect_false(any(ds$columns$control_vars %in% names(default_mroi)))
+
+  optimized <- optimize_budget(result, max_iter = 1L)
+  expect_setequal(names(optimized$allocation), ds$columns$promo_vars)
+  observed_budget <- sum(vapply(
+    ds$columns$promo_vars,
+    function(ch) sum(result$prepared_data$df[[ch]]),
+    numeric(1L)
+  ))
+  expect_equal(sum(optimized$allocation), observed_budget, tolerance = 1e-8)
+
+  feature_cols <- result$prepared_data$feature_cols
+  X <- as.data.frame(
+    result$prepared_data$df[, feature_cols, with = FALSE],
+    check.names = FALSE
+  )
+  plan <- reallocate(result, X, budget_delta_pct = 10,
+                     cap_percentile = 100)
+  expect_identical(plan$channels, ds$columns$promo_vars)
+  expect_false(any(ds$columns$control_vars %in% plan$channels))
 })
 
 test_that("treemmm_run with auto objective detects poisson on pharma counts", {

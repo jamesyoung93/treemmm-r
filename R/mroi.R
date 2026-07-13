@@ -64,16 +64,7 @@ simulate_response <- function(result,
 #' @export
 mroi_ranking <- function(result, channels = NULL) {
   if (is.null(channels)) {
-    channels <- result$prepared_data$df  # data.table
-    channels <- result$prepared_data
-    channels <- intersect(
-      result$prepared_data$feature_cols,
-      # promo_vars only — pull from the config column spec.
-      # The pipeline_result does not currently store the config directly,
-      # so re-derive from feature_cols and rely on the caller passing the
-      # promo subset if needed.
-      result$prepared_data$feature_cols
-    )
+    channels <- result$config$columns$promo_vars
   }
   rois <- numeric(length(channels))
   names(rois) <- channels
@@ -97,14 +88,18 @@ mroi_ranking <- function(result, channels = NULL) {
 
 #' Reallocate a fixed budget across channels to maximize predicted outcome
 #'
-#' Simple coordinate-ascent over a small fixed grid. Each channel is
-#' constrained to `[per_customer_min, per_customer_max] * n_obs`. The total
-#' budget is held constant; channels are shifted by `step_frac` of current
-#' allocation each iteration until no shift improves predicted outcome.
+#' Simple coordinate ascent over aggregate channel totals. At each step, the
+#' full source and destination columns are rescaled to move `step_frac` of the
+#' source's current aggregate allocation. The total aggregate budget is held
+#' constant, and iterations stop when no candidate shift improves the mean
+#' predicted outcome.
+#'
+#' This function does not impose per-row or per-customer caps. Use
+#' [reallocate()] when a cap-bounded additive landing plan is required.
 #'
 #' @param result A [treemmm_run()] result.
-#' @param channels Channels eligible for reallocation. Default: all
-#'   `feature_cols` (caller should restrict to promo_vars).
+#' @param channels Channels eligible for reallocation. Defaults to `promo_vars`
+#'   in the pipeline's column specification.
 #' @param step_frac Fraction of current allocation moved per iteration.
 #' @param max_iter Hard cap on coordinate-ascent iterations.
 #' @return A list with `$allocation` (new per-channel total) and
@@ -115,7 +110,7 @@ optimize_budget <- function(result,
                             step_frac = 0.1,
                             max_iter = 20L) {
   if (is.null(channels)) {
-    channels <- result$prepared_data$feature_cols
+    channels <- result$config$columns$promo_vars
   }
   X_ref <- as.matrix(result$prepared_data$df[, result$prepared_data$feature_cols,
                                              with = FALSE])

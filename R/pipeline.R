@@ -23,6 +23,7 @@
 #'   * `fold_metrics` — list of per-fold R-squared / WMAPE / MAE / n_test
 #'   * `fold_splits` — row indices and periods used for model training,
 #'     tuning validation, and held-out evaluation in each fold
+#'   * `config` — the [run_config()] used for the pipeline
 #'   * `prepared_data` — output of `prepare_data()`
 #'   * `model` — the last fold's fitted LightGBM model
 #'   * `shap_result` — SHAP values + expected_value + link on the test set
@@ -121,6 +122,7 @@ treemmm_run <- function(df, config, output_dir = NULL) {
       attribution_shares = shares,
       fold_metrics       = fold_metrics,
       fold_splits        = fold_splits,
+      config             = config,
       prepared_data      = prepared,
       model              = last_fit$model,
       shap_result        = shap_result,

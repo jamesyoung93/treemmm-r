@@ -38,10 +38,17 @@
   as.numeric(stats::predict(model, X))
 }
 
-# Best-effort channel inference from monotone constraints (+1 == spendable).
-# Returns NULL when constraints / feature names are unavailable, matching the
-# Python `_infer_channels` contract.
+# Prefer configured promo variables for a pipeline result; otherwise infer
+# spendable channels from monotone constraints (+1 == spendable). Returns NULL
+# when neither source is available, matching the Python `_infer_channels`
+# contract.
 .mroi_infer_channels <- function(model, X) {
+  if (inherits(model, "pipeline_result")) {
+    promo <- model$config$columns$promo_vars
+    selected <- promo[promo %in% colnames(X)]
+    return(if (length(selected) == 0L) NULL else selected)
+  }
+
   mono <- model$monotone_constraints
   feats <- model$feature_names
   if (is.null(mono) || is.null(feats) || length(mono) != length(feats)) {
@@ -106,8 +113,8 @@
 #'   `channels`.
 #' @param channels Reallocate across this set of channels, each independently
 #'   capped and grown by `budget_delta_pct`. When both `channel` and `channels`
-#'   are `NULL` the channel set is inferred from the model's monotone
-#'   constraints.
+#'   are `NULL` the channel set is read from a `pipeline_result`'s configured
+#'   `promo_vars`, or inferred from another model's monotone constraints.
 #' @return A `reallocation_plan`: a list with the per-row landing plan
 #'   (`per_row`), per-channel `current_aggregate` / `proposed_aggregate`, the
 #'   summed `predicted_outcome_current` / `predicted_outcome_proposed`,
@@ -246,8 +253,9 @@ reallocate <- function(model, X, budget_delta_pct, cap_percentile = 95,
 #' @param cap_percentile Per-customer cap percentile, held fixed across levels
 #'   (default 95).
 #' @param channel Reallocate a single named channel (takes precedence).
-#' @param channels Channel set to reallocate; inferred from the model's monotone
-#'   constraints when both `channel` and `channels` are `NULL`.
+#' @param channels Channel set to reallocate. When both `channel` and `channels`
+#'   are `NULL`, it is read from a `pipeline_result`'s configured `promo_vars`
+#'   or inferred from another model's monotone constraints.
 #' @param tol Unallocatable-fraction tolerance defining `max_allocatable_delta`.
 #' @return A `reallocation_curve`: a list with the decision `table` (one row per
 #'   level), the per-level `plans`, the swept `budget_deltas`, and
