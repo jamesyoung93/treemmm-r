@@ -21,6 +21,8 @@
 #' @return A `pipeline_result` list with fields:
 #'   * `attribution_shares` — named list of per-feature shares summing to 1
 #'   * `fold_metrics` — list of per-fold R-squared / WMAPE / MAE / n_test
+#'   * `fold_splits` — row indices and periods used for model training,
+#'     tuning validation, and held-out evaluation in each fold
 #'   * `prepared_data` — output of `prepare_data()`
 #'   * `model` — the last fold's fitted LightGBM model
 #'   * `shap_result` — SHAP values + expected_value + link on the test set
@@ -56,29 +58,36 @@ treemmm_run <- function(df, config, output_dir = NULL) {
   lgbm_objective <- .objective_to_lgbm(prepared$objective)
 
   fold_metrics <- vector("list", length(splits))
+  fold_splits <- vector("list", length(splits))
   last_fit <- NULL
   last_test_idx <- NULL
 
   for (k in seq_along(splits)) {
     sp <- splits[[k]]
-    train_df <- df_p[sp$train_idx, ]
-    test_df  <- df_p[sp$test_idx,  ]
-    if (nrow(train_df) == 0L || nrow(test_df) == 0L) {
+    tuning_sp <- .split_tuning_validation(df_p, sp, cs$time_col)
+    fold_splits[[k]] <- tuning_sp
+    train_df <- df_p[tuning_sp$tuning_train_idx, ]
+    val_df   <- df_p[tuning_sp$tuning_val_idx, ]
+    test_df  <- df_p[tuning_sp$test_idx, ]
+    if (nrow(train_df) == 0L || nrow(val_df) == 0L || nrow(test_df) == 0L) {
       fold_metrics[[k]] <- list(fold = k, r2 = NA, wmape = NA,
                                 mae = NA, n_test = nrow(test_df))
       next
     }
 
     X_train <- as.matrix(train_df[, feature_cols, with = FALSE])
+    X_val   <- as.matrix(val_df[, feature_cols, with = FALSE])
     X_test  <- as.matrix(test_df[,  feature_cols, with = FALSE])
     storage.mode(X_train) <- "double"
+    storage.mode(X_val)   <- "double"
     storage.mode(X_test)  <- "double"
     y_train <- as.numeric(train_df[[outcome_col]])
+    y_val   <- as.numeric(val_df[[outcome_col]])
     y_test  <- as.numeric(test_df[[outcome_col]])
 
     fit <- fit_lightgbm(
       X_train = X_train, y_train = y_train,
-      X_val   = X_test,  y_val   = y_test,
+      X_val   = X_val,   y_val   = y_val,
       objective = lgbm_objective,
       tweedie_variance_power = config$tweedie_variance_power,
       monotone_constraints = monotone,
@@ -90,7 +99,7 @@ treemmm_run <- function(df, config, output_dir = NULL) {
     fold_metrics[[k]] <- .compute_fold_metrics(k, y_test, preds, nrow(test_df))
 
     last_fit <- fit
-    last_test_idx <- sp$test_idx
+    last_test_idx <- tuning_sp$test_idx
   }
 
   if (is.null(last_fit)) {
@@ -111,6 +120,7 @@ treemmm_run <- function(df, config, output_dir = NULL) {
     list(
       attribution_shares = shares,
       fold_metrics       = fold_metrics,
+      fold_splits        = fold_splits,
       prepared_data      = prepared,
       model              = last_fit$model,
       shap_result        = shap_result,

@@ -87,3 +87,40 @@ test_that("get_splits returns the requested number of rolling-origin folds", {
     expect_true(all(s$train_times < min(s$test_times)))
   }
 })
+
+test_that("pipeline tuning windows are disjoint and temporally ordered", {
+  skip_if_not_installed("lightgbm")
+  ds <- generate_linear_dataset(n_customers = 30L, n_periods = 12L,
+                                random_state = 42L)
+  cfg <- run_config(
+    columns = column_spec(
+      customer_id = ds$columns$customer_id,
+      time_col = ds$columns$time_col,
+      outcome_col = ds$columns$outcome_col,
+      promo_vars = ds$columns$promo_vars,
+      control_vars = ds$columns$control_vars
+    ),
+    objective = "gaussian",
+    n_optuna_trials = 1L,
+    n_folds = 3L,
+    min_train_frac = 0.5,
+    random_state = 42L
+  )
+
+  result <- treemmm_run(ds$df, cfg)
+  expect_length(result$fold_splits, 3L)
+  time_values <- result$prepared_data$df[[ds$columns$time_col]]
+
+  for (sp in result$fold_splits) {
+    expect_length(intersect(sp$tuning_train_idx, sp$tuning_val_idx), 0L)
+    expect_length(intersect(sp$tuning_train_idx, sp$test_idx), 0L)
+    expect_length(intersect(sp$tuning_val_idx, sp$test_idx), 0L)
+    expect_setequal(c(sp$tuning_train_idx, sp$tuning_val_idx),
+                    sp$outer_train_idx)
+
+    expect_true(max(time_values[sp$tuning_train_idx]) <
+                min(time_values[sp$tuning_val_idx]))
+    expect_true(max(time_values[sp$tuning_val_idx]) <
+                min(time_values[sp$test_idx]))
+  }
+})
